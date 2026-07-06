@@ -383,7 +383,7 @@ export default function App() {
   async function notifyUsers(userIds, type, message, opts={}) {
     const ids=[...new Set(userIds)].filter(Boolean);
     if(!ids.length) return;
-    const rows = ids.map(uid=>({id:uid(),user_id:uid,type,message,read:false,email:!!opts.email,k:opts.k||null,created_at:Date.now()}));
+    const rows = ids.map(userId=>({id:uid(),user_id:userId,type,message,read:false,email:!!opts.email,k:opts.k||null,created_at:Date.now()}));
     const filtered = opts.k
       ? rows.filter(r=>!db.notifications.some(n=>n.user_id===r.user_id&&n.k===opts.k))
       : rows;
@@ -392,7 +392,7 @@ export default function App() {
       await loadAll();
       // メール送信
       if(opts.email) {
-        const emailTargets = ids.map(uid=>{const u=db.users.find(x=>x.id===uid);return u?u.email:null;}).filter(Boolean);
+        const emailTargets = ids.map(userId=>{const u=db.users.find(x=>x.id===userId);return u?u.email:null;}).filter(Boolean);
         if(emailTargets.length) {
           try {
             console.log("メール送信開始:", emailTargets, message.slice(0,30));
