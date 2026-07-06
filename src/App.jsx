@@ -1092,6 +1092,7 @@ function ProjectForm({initial, onClose}) {
   const [errs,setErrs]=useState({});
   const set=(k,v)=>setF(x=>({...x,[k]:v}));
   function toggleMember(id){set("member_ids",f.member_ids.includes(id)?f.member_ids.filter(x=>x!==id):[...f.member_ids,id]);}
+  const [busy,setBusy]=useState(false);
   async function submit() {
     const e={};
     if(!f.name.trim()) e.name="プロジェクト名は必須です";
@@ -1101,6 +1102,7 @@ function ProjectForm({initial, onClose}) {
     if(!f.end_date) e.end_date="終了日は必須です";
     if(f.start_date&&f.end_date&&f.end_date<f.start_date) e.end_date="終了日は開始日以降にしてください";
     setErrs(e); if(Object.keys(e).length) return;
+    setBusy(true);
     const data={...f,budget:Number(f.budget)};
     if(initial){
       await updateRow("projects",{id:initial.id},data);
@@ -1129,7 +1131,7 @@ function ProjectForm({initial, onClose}) {
       <Field label="Notion連携 (任意)"><input className="input" placeholder="https://www.notion.so/..." value={f.notion_url||""} onChange={e=>set("notion_url",e.target.value)}/></Field>
       <div className="flex justify-end gap-2 mt-4">
         <button className="btn" onClick={onClose}>キャンセル</button>
-        <button className="btn btn-p" onClick={submit}>{initial?"保存する":"作成する"}</button>
+        <button className="btn btn-p" disabled={busy} onClick={submit}>{busy?"処理中…":initial?"保存する":"作成する"}</button>
       </div>
     </Modal>
   );
@@ -1258,7 +1260,8 @@ function TaskForm({p, initial, onClose}) {
   const st=projectStats(p,db.tasks.filter(t=>!initial||t.id!==initial.id),db.worklogs);
   const budgetOver=Number(f.budget)>0&&Number(f.budget)>st.remain;
   const deadlineOver=f.deadline&&p.end_date&&f.deadline>p.end_date;
-  const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id)||u.id===f.assigned_user_id);
+  const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id)||u.role==="PM"||u.id===f.assigned_user_id).filter(u=>!u.pending);
+  const [busyT,setBusyT]=useState(false);
   async function submit() {
     const e={};
     if(!f.title.trim()) e.title="タスク名は必須です";
@@ -1268,6 +1271,7 @@ function TaskForm({p, initial, onClose}) {
     if(mm<=0) e.maxH="稼働時間上限を入力してください";
     if(!f.deadline) e.deadline="期日は必須です";
     setErrs(e); if(Object.keys(e).length) return;
+    setBusyT(true);
     const base={title:f.title.trim(),description:f.description,goal:f.goal.trim(),assigned_user_id:f.assigned_user_id||null,priority:f.priority,budget:Number(f.budget),max_minutes:mm,deadline:f.deadline};
     if(initial){
       await updateRow("tasks",{id:initial.id},{...base,status:f.status,completed_at:f.status==="done"?(initial.completed_at||Date.now()):null});
@@ -1303,14 +1307,14 @@ function TaskForm({p, initial, onClose}) {
       </div>
       <div className="flex justify-end gap-2 mt-4">
         <button className="btn" onClick={onClose}>キャンセル</button>
-        <button className="btn btn-p" onClick={submit}>{initial?"保存する":"作成する"}</button>
+        <button className="btn btn-p" disabled={busyT} onClick={submit}>{busyT?"処理中…":initial?"保存する":"作成する"}</button>
       </div>
     </Modal>
   );
 }
 
 function PMTaskModal({taskId, onEdit, onClose}) {
-  const {db,deleteRow,ask,toast}=useApp();
+  const {db,deleteRow,ask,toast,updateRow}=useApp();
   const t=db.tasks.find(x=>x.id===taskId); if(!t) return null;
   const p=db.projects.find(x=>x.id===t.project_id);
   const logs=db.worklogs.filter(l=>l.task_id===t.id).sort((a,b)=>b.started_at-a.started_at);
@@ -1346,6 +1350,8 @@ function PMTaskModal({taskId, onEdit, onClose}) {
                 <span className="mono font-medium" style={{width:56}}>{fmtHM(l.duration_min)}</span>
                 <span className="text-xs" style={{width:72,flexShrink:0}}>{u?u.name:"?"}</span>
                 <span className="text-xs flex-1 truncate" style={{color:"var(--muted)"}}>{l.note}</span>
+                <button className="iconbtn" style={{width:24,height:24,flexShrink:0}} title="このログを削除"
+                  onClick={async()=>{if(await ask(`${fmtDT(l.started_at)} の稼働記録(${fmtHM(l.duration_min)})を削除しますか？`)){await deleteRow("worklogs",{id:l.id});toast("稼働記録を削除しました");}}}><Trash2 size={12}/></button>
               </div>);})}
           </div>
         )}
@@ -1401,7 +1407,7 @@ function LLMModal({p, onClose}) {
   const [chat,setChat]=useState([]); const [input,setInput]=useState(""); const [loading,setLoading]=useState(false);
   const [preview,setPreview]=useState([]); const [pasteMode,setPasteMode]=useState(false); const [pasteText,setPasteText]=useState(""); const [err,setErr]=useState("");
   const chatEnd=useRef(null);
-  const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id));
+  const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id)||u.role==="PM").filter(u=>!u.pending);
   const st=projectStats(p,db.tasks,db.worklogs);
   useEffect(()=>{chatEnd.current&&chatEnd.current.scrollIntoView({behavior:"smooth"});},[chat,loading]);
   const sysPrompt=()=>`あなたはPM支援AIです。以下のJSON配列【のみ】で回答してください(説明文不要):\n${LLM_JSON_SPEC}\n制約: assigned_memberは${candidates.map(u=>u.name).join(",")||"なし"}のみ。deadline: ${todayStr()}〜${p.end_date||"未設定"}。budgetの合計は${Math.max(0,st.remain)}円以内の目安。\nプロジェクト: ${p.name}: ${p.description}`;
@@ -1966,7 +1972,7 @@ function TimerConfirmModal({data, onClose}) {
   const {task,seconds,startedAt}=data;
   const preH=Math.floor(seconds/3600),preM=Math.floor((seconds%3600)/60);
   const [h,setH]=useState(preH); const [m,setM]=useState(preM);
-  const [edited,setEdited]=useState(false); const [note,setNote]=useState(""); const [err,setErr]=useState("");
+  const [edited,setEdited]=useState(false); const [note,setNote]=useState(""); const [err,setErr]=useState(""); const [busyW,setBusyW]=useState(false);
   const measuredMin=seconds/60;
   const editedMin=(Number(h)||0)*60+(Number(m)||0);
   function onEdit(setter){return e=>{setter(e.target.value);setEdited(true);setErr("");};}
@@ -1975,6 +1981,7 @@ function TimerConfirmModal({data, onClose}) {
     if(edited&&editedMin>measuredMin){setErr("計測時間より長くすることはできません");return;}
     if(edited&&editedMin<=0){setErr("1分以上を入力してください");return;}
     if(!task){toast("対象タスクが削除されていたため記録を破棄しました");onClose();return;}
+    setBusyW(true);
     await commitWorkLog(task,startedAt,seconds,edited?editedMin:measuredMin,note);
   }
   async function discard(){if(await ask("この計測記録を破棄しますか？")) onClose();}
@@ -1992,7 +1999,7 @@ function TimerConfirmModal({data, onClose}) {
       <Field label={`メモ (任意・${note.length}/100文字)`}><input className="input" maxLength={100} value={note} onChange={e=>setNote(e.target.value)} placeholder="作業内容のメモ"/></Field>
       <div className="flex justify-between gap-2 mt-4">
         <button className="btn btn-d" onClick={discard}>破棄</button>
-        <button className="btn btn-p" onClick={submit}><Check size={15}/>確定・報告</button>
+        <button className="btn btn-p" disabled={busyW} onClick={submit}>{busyW?"記録中…":<><Check size={15}/>確定・報告</>}</button>
       </div>
     </Modal>
   );
