@@ -395,7 +395,8 @@ export default function App() {
         const emailTargets = ids.map(uid=>{const u=db.users.find(x=>x.id===uid);return u?u.email:null;}).filter(Boolean);
         if(emailTargets.length) {
           try {
-            await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/send-email", {
+            console.log("メール送信開始:", emailTargets, message.slice(0,30));
+            const res = await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/send-email", {
               method:"POST",
               headers:{"Content-Type":"application/json","Authorization":"Bearer sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY"},
               body:JSON.stringify({
@@ -404,6 +405,8 @@ export default function App() {
                 html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px"><h2 style="color:#2F5AA8;margin-bottom:8px">FN.Task</h2><p style="font-size:15px;color:#1C1E26">${message}</p><hr style="border:none;border-top:1px solid #E5E2D9;margin:20px 0"/><p style="font-size:12px;color:#6A6F7A">このメールはFN.Taskから自動送信されています。<br/><a href="https://task-manager-tau-two-25.vercel.app" style="color:#2F5AA8">FN.Taskを開く</a></p></div>`
               })
             });
+            const result = await res.json();
+            console.log("メール送信結果:", res.status, result);
           } catch(e) { console.warn("メール送信失敗:", e); }
         }
       }
@@ -1103,6 +1106,7 @@ function ProjectForm({initial, onClose}) {
     if(f.start_date&&f.end_date&&f.end_date<f.start_date) e.end_date="終了日は開始日以降にしてください";
     setErrs(e); if(Object.keys(e).length) return;
     setBusy(true);
+    onClose();
     const data={...f,budget:Number(f.budget)};
     if(initial){
       await updateRow("projects",{id:initial.id},data);
@@ -1113,7 +1117,6 @@ function ProjectForm({initial, onClose}) {
       await notifyUsers(f.member_ids,"system",`プロジェクト「${f.name}」に追加されました`);
       toast("プロジェクトを作成しました");
     }
-    onClose();
   }
   return (
     <Modal open onClose={onClose} title={initial?"プロジェクトを編集":"新規プロジェクト"}>
@@ -1272,6 +1275,7 @@ function TaskForm({p, initial, onClose}) {
     if(!f.deadline) e.deadline="期日は必須です";
     setErrs(e); if(Object.keys(e).length) return;
     setBusyT(true);
+    onClose();
     const base={title:f.title.trim(),description:f.description,goal:f.goal.trim(),assigned_user_id:f.assigned_user_id||null,priority:f.priority,budget:Number(f.budget),max_minutes:mm,deadline:f.deadline};
     if(initial){
       await updateRow("tasks",{id:initial.id},{...base,status:f.status,completed_at:f.status==="done"?(initial.completed_at||Date.now()):null});
@@ -1283,7 +1287,6 @@ function TaskForm({p, initial, onClose}) {
       if(base.assigned_user_id) await notifyUsers([base.assigned_user_id],"assign",`タスク「${base.title}」が割り当てられました (${p.name})`,{email:true});
       toast("タスクを作成しました");
     }
-    onClose();
   }
   return (
     <Modal open onClose={onClose} title={initial?"タスクを編集":"新規タスク"}>
