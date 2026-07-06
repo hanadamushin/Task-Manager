@@ -1048,14 +1048,22 @@ function Heatmap({members,logs}) {
 }
 
 function ProjectCard({p}) {
-  const {db,nav}=useApp();
+  const {db,nav,ask,deleteRow,toast}=useApp();
   const st=projectStats(p,db.tasks,db.worklogs);
   const members=(p.member_ids||[]).map(id=>db.users.find(u=>u.id===id)).filter(Boolean);
   return (
     <div className="panel p-4 cursor-pointer" onClick={()=>nav("project",{id:p.id})}>
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="font-bold text-sm truncate flex-1">{p.name}</div>
-        <Badge cls={PJ_BADGE[p.status]} dot>{PJST[p.status]}</Badge>
+        <div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}>
+          <Badge cls={PJ_BADGE[p.status]} dot>{PJST[p.status]}</Badge>
+          <button className="iconbtn" style={{width:26,height:26}} title="プロジェクトを削除"
+            onClick={async()=>{
+              if(!(await ask(`プロジェクト「${p.name}」を削除しますか？\nタスク・稼働ログもすべて削除されます。`))) return;
+              if(!(await ask("本当に削除しますか？\nこの操作は取り消せません。"))) return;
+              await deleteRow("projects",{id:p.id}); toast("プロジェクトを削除しました");
+            }}><Trash2 size={13}/></button>
+        </div>
       </div>
       <div className="flex items-center justify-between text-xs mb-1" style={{color:"var(--muted)"}}><span>予算消化</span><span className="mono">{Math.round(st.consumedRate*100)}%</span></div>
       <Prog ratio={st.consumedRate}/>
@@ -1073,7 +1081,7 @@ function ProjectCard({p}) {
 }
 
 function ProjectsView() {
-  const {db}=useApp();
+  const {db,ask,deleteRow,toast}=useApp();
   const [filter,setFilter]=useState("all");
   const [form,setForm]=useState(null);
   const list=db.projects.filter(p=>filter==="all"||p.status===filter).sort((a,b)=>b.created_at-a.created_at);
@@ -1242,6 +1250,14 @@ function TasksTab({p}) {
                 <td><Badge cls={ST_BADGE[r.t.status]} dot>{ST[r.t.status]}</Badge></td>
                 <td className="num">{fmtHM(r.worked)}</td>
                 <td className="num">{fmtYen(r.remain)}</td>
+                <td onClick={e=>e.stopPropagation()}>
+                  <button className="iconbtn" style={{width:26,height:26}} title="タスクを削除"
+                    onClick={async()=>{
+                      if(!(await ask(`タスク「${r.t.title}」を削除しますか？\n稼働ログ・コメントも削除されます。`))) return;
+                      if(!(await ask("本当に削除しますか？\nこの操作は取り消せません。"))) return;
+                      await deleteRow("tasks",{id:r.t.id}); toast("タスクを削除しました");
+                    }}><Trash2 size={13}/></button>
+                </td>
               </tr>
             ))}
             {rows.length===0&&<tr><td colSpan={10}><Empty icon={ClipboardList} text="タスクがありません"/></td></tr>}
@@ -1324,7 +1340,8 @@ function PMTaskModal({taskId, onEdit, onClose}) {
   const worked=workedMin(db.worklogs,t.id);
   const assignee=db.users.find(u=>u.id===t.assigned_user_id);
   async function del() {
-    if(!(await ask(`タスク「${t.title}」を削除しますか？`))) return;
+    if(!(await ask(`タスク「${t.title}」を削除しますか？\n稼働ログ・コメントも削除されます。`))) return;
+    if(!(await ask(`本当に削除しますか？\nこの操作は取り消せません。`))) return;
     await deleteRow("tasks",{id:t.id});
     toast("タスクを削除しました"); onClose();
   }
@@ -1591,7 +1608,8 @@ function SettingsTab({p}) {
     setFetched(null);toast("Notionの情報を取り込みました");
   }
   async function delProject(){
-    if(!(await ask(`プロジェクト「${p.name}」を削除しますか？`))) return;
+    if(!(await ask(`プロジェクト「${p.name}」を削除しますか？\nタスク・稼働ログもすべて削除されます。`))) return;
+    if(!(await ask(`本当に削除しますか？\nこの操作は取り消せません。`))) return;
     await deleteRow("projects",{id:p.id});
     toast("プロジェクトを削除しました");nav("projects");
   }
