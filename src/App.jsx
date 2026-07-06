@@ -738,6 +738,19 @@ function PMApplyView({ toLogin }) {
 
 /* ---------- デモデータ完了画面 ---------- */
 function SeedDoneView({ seedInfo, doLogin }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function handleLogin() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const e = await doLogin(seedInfo.email, seedInfo.pw);
+      if (e) setErr(e);
+    } catch(ex) {
+      setErr(String(ex));
+    }
+    setBusy(false);
+  }
   return (
     <div className="flex items-center justify-center px-4" style={{ minHeight: "100vh" }}>
       <div className="panel p-6 w-full" style={{ maxWidth: 480 }}>
@@ -749,7 +762,15 @@ function SeedDoneView({ seedInfo, doLogin }) {
             <div key={c.email} className="text-sm mono py-1">{c.name} — {c.email} / {c.pw}</div>
           ))}
         </div>
-        <button className="btn btn-p w-full justify-center" onClick={() => doLogin(seedInfo.email, seedInfo.pw)}>PMとしてログイン</button>
+        {err && <div className="err mb-2">{err}</div>}
+        <button
+          className="btn btn-p w-full justify-center"
+          disabled={busy}
+          onClick={handleLogin}
+          onTouchEnd={(e) => { e.preventDefault(); handleLogin(); }}
+        >
+          {busy ? "ログイン中…" : "PMとしてログイン"}
+        </button>
       </div>
     </div>
   );
