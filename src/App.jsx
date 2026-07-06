@@ -2610,7 +2610,7 @@ function UsersView() {
   return (
     <div>
       <PageTitle title="ユーザー管理" sub={`${db.users.length} 名`} right={<button className="btn btn-p" onClick={() => setInvite(true)}><Plus size={15} />メンバーを招待</button>} />
-      <PMApprovalSection db={db} mutate={mutate} toast={toast} notifyUsers={notifyUsers} />
+      <PMApprovalSection db={db} mutate={mutate} toast={toast} />
       <div className="panel" style={{ overflowX: "auto" }}>
         <table className="tbl" style={{ minWidth: 620 }}>
           <thead><tr><th>ユーザー</th><th>メール</th><th>ロール</th><th /></tr></thead>
@@ -2663,13 +2663,11 @@ function UsersView() {
 }
 
 /* ---------- PM申請承認セクション (UsersView内で使用) ---------- */
-function PMApprovalSection({ db, mutate, toast, notifyUsers }) {
+function PMApprovalSection({ db, mutate, toast }) {
   const pending = db.users.filter((u) => u.pending && u.role === "PM");
   if (pending.length === 0) return null;
   async function approve(u) {
     await mutate("users", (list) => list.map((x) => x.id === u.id ? { ...x, pending: false } : x));
-    const notifs = (await S.get("tm:notifications")) || [];
-    // 承認されたユーザー自身への通知は次回ログイン時に見える
     toast(`${u.name} のPM権限を承認しました`);
   }
   async function reject(u) {
