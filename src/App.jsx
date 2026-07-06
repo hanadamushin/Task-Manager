@@ -10,11 +10,10 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer } from "recharts";
 
 /* ============================================================
-   FN.Task — Supabase Auth版
-   ============================================================ */
+   FN.Task  ESupabase Auth牁E   ============================================================ */
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const SUPABASE_URL = "https://bfzqetdxpzcrgngszueg.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ---------- CSS ---------- */
@@ -106,14 +105,14 @@ const CSS = `
   background:var(--red); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; }
 `;
 
-/* ---------- ユーティリティ ---------- */
+/* ---------- ユーチE��リチE�� ---------- */
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36);
 const genPw = () => Math.random().toString(36).slice(2,6)+Math.random().toString(36).slice(2,6);
 const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 const fmtYen = n => "¥"+Math.round(Number(n)||0).toLocaleString("ja-JP");
 const fmtHM = min => { const m=Math.round(min||0); return `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")}`; };
 const fmtHMS = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60; return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; };
-const fmtDate = s => { if(!s) return "—"; const d=new Date(s); return `${d.getMonth()+1}/${d.getDate()}`; };
+const fmtDate = s => { if(!s) return " E; const d=new Date(s); return `${d.getMonth()+1}/${d.getDate()}`; };
 const fmtDT = ts => { const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
 const daysUntil = s => { if(!s) return 9999; return Math.floor((new Date(s+"T23:59:59")-new Date())/864e5); };
 const weekRange = () => { const d=new Date(),day=(d.getDay()+6)%7,s=new Date(d); s.setHours(0,0,0,0); s.setDate(d.getDate()-day); const e=new Date(s); e.setDate(s.getDate()+7); return [s.getTime(),e.getTime()]; };
@@ -122,7 +121,7 @@ const clamp01 = x => Math.max(0,Math.min(1,x||0));
 const AV_COLORS = ["#2F5AA8","#8C5AA8","#B7791F","#2F855A","#C43D3D","#3A7CA5","#7A6A4F","#5A67A8"];
 const LS = { get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
 
-/* ---------- Supabase DB操作 ---------- */
+/* ---------- Supabase DB操佁E---------- */
 const db_select = async (table, query="") => { const {data,error}=await supabase.from(table).select("*"); if(error) throw error; return data||[]; };
 const db_select_q = async (table, filters={}, order=null, limit=null) => {
   let q = supabase.from(table).select("*");
@@ -136,11 +135,11 @@ const db_update = async (table, match, data) => { let q=supabase.from(table).upd
 const db_delete = async (table, match) => { let q=supabase.from(table).delete(); Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);}); const {error}=await q; if(error) throw error; };
 
 /* ---------- 定数 ---------- */
-const ST={todo:"未着手",in_progress:"進行中",done:"完了"};
+const ST={todo:"未着扁E,in_progress:"進行中",done:"完亁E};
 const ST_BADGE={todo:"b-slate",in_progress:"b-blue",done:"b-green"};
-const PR={high:"高",medium:"中",low:"低"};
+const PR={high:"髁E,medium:"中",low:"佁E};
 const PR_BADGE={high:"b-red",medium:"b-amber",low:"b-slate"};
-const PJST={active:"進行中",paused:"一時停止",completed:"完了"};
+const PJST={active:"進行中",paused:"一時停止",completed:"完亁E};
 const PJ_BADGE={active:"b-blue",paused:"b-amber",completed:"b-green"};
 const NT_META={
   assign:{icon:ClipboardList},request:{icon:Inbox},approve:{icon:CheckCircle2},
@@ -149,7 +148,7 @@ const NT_META={
   extend:{icon:Calendar},system:{icon:Info},
 };
 
-/* ---------- 集計 ---------- */
+/* ---------- 雁E��E---------- */
 const workedMin = (logs,taskId) => logs.filter(l=>l.task_id===taskId).reduce((a,l)=>a+(l.duration_min||0),0);
 const taskRatio = (t,worked) => t.status==="done"?1:(t.max_minutes>0?clamp01(worked/t.max_minutes):0);
 function projectStats(p,tasks,logs) {
@@ -178,7 +177,7 @@ const Ctx = createContext(null);
 const useApp = () => useContext(Ctx);
 
 /* ---------- 汎用UI ---------- */
-function Avatar({user,size=28}){if(!user)return <span className="avatar" style={{width:size,height:size,background:"var(--border)",fontSize:size*0.4}}>—</span>;return <span className="avatar" title={user.name} style={{width:size,height:size,background:user.avatar_color||AV_COLORS[0],fontSize:size*0.42}}>{user.name.slice(0,1)}</span>;}
+function Avatar({user,size=28}){if(!user)return <span className="avatar" style={{width:size,height:size,background:"var(--border)",fontSize:size*0.4}}> E/span>;return <span className="avatar" title={user.name} style={{width:size,height:size,background:user.avatar_color||AV_COLORS[0],fontSize:size*0.42}}>{user.name.slice(0,1)}</span>;}
 function Badge({cls,children,dot}){return <span className={"badge "+cls}>{dot&&<i/>}{children}</span>;}
 function Prog({ratio,tone}){const r=clamp01(ratio);const cls=tone||(r>=1?"over":r>=0.9?"warn":"");return <div className="prog"><i className={cls} style={{width:(r*100).toFixed(1)+"%"}}/></div>;}
 function Modal({open,onClose,title,children,wide,noClose}){if(!open)return null;return <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget&&!noClose)onClose();}}><div className={"modal"+(wide?" wide":"")}><div className="flex items-center justify-between mb-4"><h3 className="text-base font-bold m-0">{title}</h3>{!noClose&&<button className="iconbtn" onClick={onClose}><X size={18}/></button>}</div>{children}</div></div>;}
@@ -193,8 +192,7 @@ function PageTitle({title,sub,back,right}){return <div className="flex items-sta
 function BrandMark({size=30}){return <div className="flex items-center gap-3"><div className="flex flex-col" style={{gap:3}}><span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2}}/><span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2,opacity:0.45}}/></div><span className="wordmark" style={{fontSize:size}}>FN.Task</span></div>;}
 
 /* ============================================================
-   App Root — Supabase Auth版
-   ============================================================ */
+   App Root  ESupabase Auth牁E   ============================================================ */
 export default function App() {
   const [dbState, setDbState] = useState({users:[],projects:[],tasks:[],worklogs:[],requests:[],notifications:[],comments:[]});
   const [authUser, setAuthUser] = useState(null); // Supabase auth user
@@ -210,7 +208,7 @@ export default function App() {
   const [openTaskId, setOpenTaskId] = useState(null);
   const toastT = useRef(null);
 
-  /* --- 全データ取得 --- */
+  /* --- 全チE�Eタ取征E--- */
   async function loadAll() {
     try {
       const [u,p,t,wl,req,notif,com] = await Promise.all([
@@ -227,7 +225,7 @@ export default function App() {
     } catch(e) { console.error("loadAll failed",e); return null; }
   }
 
-  /* --- 初期化: Supabase Authセッション確認 --- */
+  /* --- 初期匁E Supabase AuthセチE��ョン確誁E--- */
   useEffect(()=>{
     const th=LS.get("fn:theme"); if(th) setTheme(th);
     const tm=LS.get("fn:timer"); if(tm&&tm.taskId) setTimer(tm);
@@ -260,15 +258,15 @@ export default function App() {
     return ()=>subscription.unsubscribe();
   },[]);
 
-  /* --- タイマー刻み --- */
+  /* --- タイマ�E刻み --- */
   useEffect(()=>{ if(!timer) return; const id=setInterval(()=>setNow(Date.now()),1000); return()=>clearInterval(id); },[timer]);
 
-  /* --- 定期リフレッシュ30秒 --- */
+  /* --- 定期リフレチE��ュ30私E--- */
   useEffect(()=>{ const id=setInterval(()=>{ if(loaded&&profile) loadAll(); },30000); return()=>clearInterval(id); },[loaded,profile]);
 
   async function refresh() { await loadAll(); }
 
-  /* --- DB操作ヘルパー --- */
+  /* --- DB操作�Eルパ�E --- */
   async function insertRow(table,data){const rows=Array.isArray(data)?data:[data];const {error}=await supabase.from(table).insert(rows);if(error)throw error;await loadAll();}
   async function updateRow(table,match,data){let q=supabase.from(table).update(data);Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);});const {error}=await q;if(error)throw error;await loadAll();}
   async function deleteRow(table,match){let q=supabase.from(table).delete();Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);});const {error}=await q;if(error)throw error;await loadAll();}
@@ -283,7 +281,7 @@ export default function App() {
   }
   const pmIds = () => dbState.users.filter(u=>u.role==="PM"&&!u.pending).map(u=>u.id);
 
-  /* --- トースト・確認 --- */
+  /* --- ト�Eスト�E確誁E--- */
   function toast(msg){setToastMsg(msg);if(toastT.current)clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(null),2800);}
   function ask(msg){return new Promise(resolve=>setConfirmReq({msg,resolve}));}
   function nav(page,params={}){setView({page,...params});}
@@ -292,24 +290,24 @@ export default function App() {
   async function doLogin(email,pw) {
     const {error} = await supabase.auth.signInWithPassword({email:email.trim().toLowerCase(),password:pw});
     if(error) {
-      if(error.message.includes("Invalid login")) return "メールアドレスまたはパスワードが正しくありません";
+      if(error.message.includes("Invalid login")) return "メールアドレスまた�Eパスワードが正しくありません";
       return error.message;
     }
-    // profileはonAuthStateChangeで設定されるが、pendingチェックを追加
+    // profileはonAuthStateChangeで設定されるが、pendingチェチE��を追加
     const {data} = await supabase.from("users").select("*").eq("email",email.trim().toLowerCase()).single();
     if(data&&data.pending) {
       await supabase.auth.signOut();
-      return "PM権限の申請が承認待ちです。既存のPMによる承認をお待ちください。";
+      return "PM権限�E申請が承認征E��です。既存�EPMによる承認をお征E��ください、E;
     }
     return null;
   }
 
   async function doSignUp(email,pw,name,role="Member",reason="") {
     const em=email.trim().toLowerCase();
-    // メール重複チェック
+    // メール重褁E��ェチE��
     const {data:existing}=await supabase.from("users").select("id").eq("email",em);
-    if(existing&&existing.length) return "そのメールアドレスはすでに登録されています";
-    // Supabase Authにサインアップ
+    if(existing&&existing.length) return "そ�Eメールアドレスはすでに登録されてぁE��ぁE;
+    // Supabase AuthにサインアチE�E
     const {data:authData,error:authError}=await supabase.auth.signUp({email:em,password:pw});
     if(authError) return authError.message;
     const authId = authData.user?.id;
@@ -321,12 +319,12 @@ export default function App() {
     // PMへ通知
     const {data:pms}=await supabase.from("users").select("id").eq("role","PM").eq("pending",false);
     if(pms&&pms.length){
-      const msg=role==="PM"?`PM権限申請: ${name} (${em})${reason?" — "+reason:""}`:`新しいMemberが登録しました: ${name} (${em})`;
+      const msg=role==="PM"?`PM権限申諁E ${name} (${em})${reason?"  E"+reason:""}`:`新しいMemberが登録しました: ${name} (${em})`;
       await supabase.from("notifications").insert(pms.map(p=>({id:uid(),user_id:p.id,type:"system",message:msg,read:false,email:false,k:null,created_at:Date.now()})));
     }
     if(role==="PM") {
       await supabase.auth.signOut();
-      return null; // 申請完了(ログインしない)
+      return null; // 申請完亁EログインしなぁE
     }
     return null;
   }
@@ -337,12 +335,12 @@ export default function App() {
   /* --- 期日リマインダー --- */
   async function runDeadlineScan(){
     const tasks=dbState.tasks.filter(t=>t.status!=="done"&&t.assigned_user_id&&t.deadline&&daysUntil(t.deadline)>=0&&daysUntil(t.deadline)<=3);
-    for(const t of tasks) await notifyUsers([t.assigned_user_id],"deadline",`「${t.title}」の期日が${daysUntil(t.deadline)===0?"今日":daysUntil(t.deadline)+"日後"}です (${t.deadline})`,{k:"dl:"+t.id+":"+t.deadline});
+    for(const t of tasks) await notifyUsers([t.assigned_user_id],"deadline",`、E{t.title}」�E期日ぁE{daysUntil(t.deadline)===0?"今日":daysUntil(t.deadline)+"日征E}でぁE(${t.deadline})`,{k:"dl:"+t.id+":"+t.deadline});
   }
   const scanned=useRef(false);
   useEffect(()=>{if(loaded&&profile&&!scanned.current){scanned.current=true;runDeadlineScan();}},[loaded,profile]);
 
-  /* --- タイマー --- */
+  /* --- タイマ�E --- */
   async function startTimer(task){
     if(timer){toast("先に計測中のタスクを停止してください");return;}
     const tm={taskId:task.id,startedAt:Date.now()};
@@ -363,8 +361,8 @@ export default function App() {
     await insertRow("worklogs",{id:uid(),task_id:task.id,user_id:profile.id,started_at:startedAt,ended_at:startedAt+measuredSec*1000,duration_min:Math.round(dur*100)/100,note:(note||"").slice(0,100),confirmed:true,created_at:Date.now()});
     const after=before+dur; const lim=task.max_minutes||0;
     if(lim>0){
-      if(after>=lim&&before<lim){await notifyUsers(pmIds(),"over",`${profile.name} のタスク「${task.title}」が稼働上限を超過しました`,{email:true});toast("⚠ 稼働上限を超過しました。PMに連絡してください。");}
-      else if(after>=lim*0.9&&before<lim*0.9){await notifyUsers(pmIds(),"limit90",`${profile.name} のタスク「${task.title}」が稼働上限の90%を超えました`,{email:true});toast("稼働時間が上限の90%を超えました");}
+      if(after>=lim&&before<lim){await notifyUsers(pmIds(),"over",`${profile.name} のタスク、E{task.title}」が稼働上限を趁E��しました`,{email:true});toast("⚠ 稼働上限を趁E��しました。PMに連絡してください、E);}
+      else if(after>=lim*0.9&&before<lim*0.9){await notifyUsers(pmIds(),"limit90",`${profile.name} のタスク、E{task.title}」が稼働上限の90%を趁E��ました`,{email:true});toast("稼働時間が上限の90%を趁E��ました");}
       else toast("稼働を記録しました");
     } else toast("稼働を記録しました");
     setTimerDone(null);
@@ -382,11 +380,11 @@ export default function App() {
           ? <AuthView doLogin={doLogin} doSignUp={doSignUp} hasUsers={dbState.users.length>0}/>
           : (profile.must_change?<ForcePwView/>:<Shell/>)}
         {toastMsg&&<div className="toastbox">{toastMsg}</div>}
-        <Modal open={!!confirmReq} onClose={()=>{confirmReq&&confirmReq.resolve(false);setConfirmReq(null);}} title="確認">
+        <Modal open={!!confirmReq} onClose={()=>{confirmReq&&confirmReq.resolve(false);setConfirmReq(null);}} title="確誁E>
           <p className="text-sm mb-5">{confirmReq&&confirmReq.msg}</p>
           <div className="flex justify-end gap-2">
             <button className="btn" onClick={()=>{confirmReq.resolve(false);setConfirmReq(null);}}>キャンセル</button>
-            <button className="btn btn-p" onClick={()=>{confirmReq.resolve(true);setConfirmReq(null);}}>実行する</button>
+            <button className="btn btn-p" onClick={()=>{confirmReq.resolve(true);setConfirmReq(null);}}>実行すめE/button>
           </div>
         </Modal>
         {timerDone&&<TimerConfirmModal data={timerDone} onClose={()=>setTimerDone(null)}/>}
@@ -418,7 +416,7 @@ function LoginView({doLogin,toRegister,toPMApply}){
         <BrandMark/>
         <h2 className="text-base font-bold mt-6 mb-4 ledger pb-2">ログイン</h2>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></Field>
-        <Field label="パスワード">
+        <Field label="パスワーチE>
           <div className="relative">
             <input type={show?"text":"password"} className="input" style={{paddingRight:40}} value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/>
             <button className="iconbtn" style={{position:"absolute",right:2,top:1}} onClick={()=>setShow(!show)}>{show?<EyeOff size={16}/>:<Eye size={16}/>}</button>
@@ -428,9 +426,9 @@ function LoginView({doLogin,toRegister,toPMApply}){
         <button className="btn btn-p w-full justify-center mb-4" disabled={busy} onClick={submit}>{busy?"確認中…":"ログイン"}</button>
         <div className="flex flex-col gap-2">
           <button className="btn w-full justify-center" onClick={toRegister}><User size={15}/>新規登録 (Member)</button>
-          <button className="btn w-full justify-center" onClick={toPMApply}><Shield size={15}/>PM権限を申請する</button>
+          <button className="btn w-full justify-center" onClick={toPMApply}><Shield size={15}/>PM権限を申請すめE/button>
         </div>
-        <p className="text-xs mt-4" style={{color:"var(--muted)"}}>パスワードを忘れた場合はPMに再発行を依頼してください。</p>
+        <p className="text-xs mt-4" style={{color:"var(--muted)"}}>パスワードを忘れた場合�EPMに再発行を依頼してください、E/p>
       </div>
     </div>
   );
@@ -442,9 +440,9 @@ function RegisterView({doSignUp,doLogin,toLogin}){
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false);
   async function submit(){
     setErr("");
-    if(!name.trim()){setErr("名前を入力してください");return;}
-    if(!email.includes("@")){setErr("有効なメールアドレスを入力してください");return;}
-    if(pw.length<6){setErr("パスワードは6文字以上にしてください");return;}
+    if(!name.trim()){setErr("名前を�E力してください");return;}
+    if(!email.includes("@")){setErr("有効なメールアドレスを�E力してください");return;}
+    if(pw.length<6){setErr("パスワード�E6斁E��以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
     setBusy(true);
     const e=await doSignUp(email,pw,name,"Member");
@@ -455,20 +453,20 @@ function RegisterView({doSignUp,doLogin,toLogin}){
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:420}}>
         <BrandMark/>
-        <h2 className="text-base font-bold mt-5 mb-1 ledger pb-2">新規登録 — Member</h2>
-        <p className="text-xs mb-4" style={{color:"var(--muted)"}}>登録後すぐにMemberとしてログインできます。</p>
-        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郎"/></Field>
+        <h2 className="text-base font-bold mt-5 mb-1 ledger pb-2">新規登録  EMember</h2>
+        <p className="text-xs mb-4" style={{color:"var(--muted)"}}>登録後すぐにMemberとしてログインできます、E/p>
+        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郁E/></Field>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></Field>
-        <Field label="パスワード (6文字以上)">
+        <Field label="パスワーチE(6斁E��以丁E">
           <div className="relative">
             <input type={show?"text":"password"} className="input" style={{paddingRight:40}} value={pw} onChange={e=>setPw(e.target.value)}/>
             <button className="iconbtn" style={{position:"absolute",right:2,top:1}} onClick={()=>setShow(!show)}>{show?<EyeOff size={16}/>:<Eye size={16}/>}</button>
           </div>
         </Field>
-        <Field label="パスワード (確認)"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
+        <Field label="パスワーチE(確誁E"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
         {err&&<div className="err mb-3">{err}</div>}
         <button className="btn btn-p w-full justify-center mb-3" disabled={busy} onClick={submit}>{busy?"登録中…":"登録してログイン"}</button>
-        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻る</button>
+        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻めE/button>
       </div>
     </div>
   );
@@ -480,7 +478,7 @@ function PMApplyView({doSignUp,toLogin}){
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false); const [done,setDone]=useState(false);
   async function submit(){
     setErr("");
-    if(!name.trim()||!email.includes("@")||pw.length<6||pw!==pw2){setErr("すべての項目を正しく入力してください");return;}
+    if(!name.trim()||!email.includes("@")||pw.length<6||pw!==pw2){setErr("すべての頁E��を正しく入力してください");return;}
     setBusy(true);
     const e=await doSignUp(email,pw,name,"PM",reason);
     if(e){setErr(e);setBusy(false);return;}
@@ -491,8 +489,8 @@ function PMApplyView({doSignUp,toLogin}){
       <div className="panel p-6 w-full text-center" style={{maxWidth:400}}>
         <BrandMark/><CheckCircle2 size={40} style={{color:"var(--green)",margin:"20px auto 12px"}}/>
         <h2 className="text-base font-bold mb-2">申請を送信しました</h2>
-        <p className="text-sm mb-5" style={{color:"var(--muted)"}}>既存のPMが承認するとログインできます。</p>
-        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻る</button>
+        <p className="text-sm mb-5" style={{color:"var(--muted)"}}>既存�EPMが承認するとログインできます、E/p>
+        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻めE/button>
       </div>
     </div>
   );
@@ -500,21 +498,21 @@ function PMApplyView({doSignUp,toLogin}){
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:420}}>
         <BrandMark/>
-        <h2 className="text-base font-bold mt-5 mb-1 ledger pb-2">PM権限の申請</h2>
-        <p className="text-xs mb-4" style={{color:"var(--muted)"}}>既存のPMが承認するまでログインできません。</p>
-        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郎"/></Field>
+        <h2 className="text-base font-bold mt-5 mb-1 ledger pb-2">PM権限�E申諁E/h2>
+        <p className="text-xs mb-4" style={{color:"var(--muted)"}}>既存�EPMが承認するまでログインできません、E/p>
+        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郁E/></Field>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></Field>
-        <Field label="パスワード (6文字以上)">
+        <Field label="パスワーチE(6斁E��以丁E">
           <div className="relative">
             <input type={show?"text":"password"} className="input" style={{paddingRight:40}} value={pw} onChange={e=>setPw(e.target.value)}/>
             <button className="iconbtn" style={{position:"absolute",right:2,top:1}} onClick={()=>setShow(!show)}>{show?<EyeOff size={16}/>:<Eye size={16}/>}</button>
           </div>
         </Field>
-        <Field label="パスワード (確認)"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)}/></Field>
-        <Field label="申請理由 (任意)"><textarea className="textarea" style={{minHeight:64}} value={reason} onChange={e=>setReason(e.target.value)} placeholder="所属・役割など"/></Field>
+        <Field label="パスワーチE(確誁E"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)}/></Field>
+        <Field label="申請理由 (任愁E"><textarea className="textarea" style={{minHeight:64}} value={reason} onChange={e=>setReason(e.target.value)} placeholder="所属�E役割など"/></Field>
         {err&&<div className="err mb-3">{err}</div>}
-        <button className="btn btn-p w-full justify-center mb-3" disabled={busy} onClick={submit}>{busy?"送信中…":"PM権限を申請する"}</button>
-        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻る</button>
+        <button className="btn btn-p w-full justify-center mb-3" disabled={busy} onClick={submit}>{busy?"送信中…":"PM権限を申請すめE}</button>
+        <button className="btn w-full justify-center" onClick={toLogin}><ArrowLeft size={14}/>ログインに戻めE/button>
       </div>
     </div>
   );
@@ -525,10 +523,10 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
   const [pw,setPw]=useState(""); const [seed,setSeed]=useState(true);
   const [busy,setBusy]=useState(false); const [err,setErr]=useState("");
   async function submit(){
-    if(!name.trim()||!email.includes("@")||pw.length<6){setErr("名前・メールアドレス・パスワード(6文字以上)を入力してください");return;}
+    if(!name.trim()||!email.includes("@")||pw.length<6){setErr("名前・メールアドレス・パスワーチE6斁E��以丁Eを�E力してください");return;}
     setBusy(true);
     try{
-      // PMアカウント作成
+      // PMアカウント作�E
       const e=await doSignUp(email,pw,name,"PM");
       if(e){setErr(e);setBusy(false);return;}
       // auth_idを取得してpendingを解除
@@ -538,7 +536,7 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
       }
       let memberCreds=[];
       if(seed){
-        const demo=[["佐藤 美咲","misaki@example.com"],["田中 蒼真","soma@example.com"],["鈴木 健","ken@example.com"]];
+        const demo=[["佐藤 美咲","misaki@example.com"],["田中 蒼省E,"soma@example.com"],["鈴木 健","ken@example.com"]];
         const members=[];
         for(let i=0;i<demo.length;i++){
           const p2="demo1234";
@@ -553,26 +551,26 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
         const {data:pmRow}=await supabase.from("users").select("id").eq("email",email.trim().toLowerCase()).single();
         const pmId=pmRow?.id;
         const p1={id:uid(),name:"会員アプリ v2 開発",description:"モバイル会員アプリのリニューアル",budget:1200000,status:"active",start_date:iso(-20),end_date:iso(40),member_ids:members.map(x=>x.id),notion_url:"",created_at:Date.now()};
-        const p2j={id:uid(),name:"営業資料テンプレ整備",description:"提案書・見積テンプレートの標準化",budget:300000,status:"active",start_date:iso(-10),end_date:iso(25),member_ids:[members[0].id,members[2].id],notion_url:"",created_at:Date.now()};
+        const p2j={id:uid(),name:"営業賁E��チE��プレ整傁E,description:"提案書・見積テンプレート�E標準化",budget:300000,status:"active",start_date:iso(-10),end_date:iso(25),member_ids:[members[0].id,members[2].id],notion_url:"",created_at:Date.now()};
         await supabase.from("projects").insert([p1,p2j]);
-        const mk=(pj,title,goal,assignee,pr,bud,maxH,dl,st)=>({id:uid(),project_id:pj.id,title,description:title+"の対応を行う。",goal,assigned_user_id:assignee,budget:bud,max_minutes:maxH*60,deadline:iso(dl),status:st,priority:pr,created_at:Date.now()});
+        const mk=(pj,title,goal,assignee,pr,bud,maxH,dl,st)=>({id:uid(),project_id:pj.id,title,description:title+"の対応を行う、E,goal,assigned_user_id:assignee,budget:bud,max_minutes:maxH*60,deadline:iso(dl),status:st,priority:pr,created_at:Date.now()});
         const tasks=[
-          mk(p1,"ログイン画面の実装","メール認証・エラー表示まで完了させる",members[0].id,"high",150000,20,5,"in_progress"),
-          mk(p1,"プッシュ通知基盤の構築","iOS/Android双方で受信確認",members[1].id,"high",200000,30,12,"in_progress"),
-          mk(p1,"会員ランクAPIの設計","API仕様書レビュー承認まで",members[2].id,"medium",120000,16,8,"todo"),
-          mk(p1,"利用規約ページ更新","法務確認済みテキストの反映",members[0].id,"low",30000,4,2,"done"),
-          mk(p1,"画像アップロード最適化","3MB→500KB圧縮パイプライン導入",null,"medium",90000,12,18,"todo"),
-          mk(p2j,"提案書テンプレ v1","3案件で使えるマスター資料完成",members[0].id,"medium",80000,10,6,"in_progress"),
-          mk(p2j,"見積計算シート整備","係数変更に耐える計算式に更新",members[2].id,"high",100000,14,3,"todo"),
-          mk(p2j,"過去事例集の作成","10事例を1枚ずつに要約",null,"low",60000,8,20,"todo"),
+          mk(p1,"ログイン画面の実裁E,"メール認証・エラー表示まで完亁E��せる",members[0].id,"high",150000,20,5,"in_progress"),
+          mk(p1,"プッシュ通知基盤の構篁E,"iOS/Android双方で受信確誁E,members[1].id,"high",200000,30,12,"in_progress"),
+          mk(p1,"会員ランクAPIの設訁E,"API仕様書レビュー承認まで",members[2].id,"medium",120000,16,8,"todo"),
+          mk(p1,"利用規紁E�Eージ更新","法務確認済みチE��スト�E反映",members[0].id,"low",30000,4,2,"done"),
+          mk(p1,"画像アチE�Eロード最適匁E,"3MBↁE00KB圧縮パイプライン導�E",null,"medium",90000,12,18,"todo"),
+          mk(p2j,"提案書チE��プレ v1","3案件で使えるマスター賁E��完�E",members[0].id,"medium",80000,10,6,"in_progress"),
+          mk(p2j,"見積計算シート整傁E,"係数変更に耐える計算式に更新",members[2].id,"high",100000,14,3,"todo"),
+          mk(p2j,"過去事例集の作�E","10事例を1枚ずつに要紁E,null,"low",60000,8,20,"todo"),
         ];
         await supabase.from("tasks").insert(tasks);
         const wl=(t,u2,min,dayOff,note)=>{const st=Date.now()-dayOff*864e5-min*60000;return{id:uid(),task_id:t.id,user_id:u2,started_at:st,ended_at:st+min*60000,duration_min:min,note,confirmed:true,created_at:Date.now()};};
         await supabase.from("worklogs").insert([
-          wl(tasks[0],members[0].id,240,3,"UI組み込み"),wl(tasks[0],members[0].id,180,1,"バリデーション実装"),
-          wl(tasks[1],members[1].id,300,4,"FCM設定"),wl(tasks[1],members[1].id,420,2,"端末検証"),
+          wl(tasks[0],members[0].id,240,3,"UI絁E��込み"),wl(tasks[0],members[0].id,180,1,"バリチE�Eション実裁E),
+          wl(tasks[1],members[1].id,300,4,"FCM設宁E),wl(tasks[1],members[1].id,420,2,"端末検証"),
           wl(tasks[1],members[1].id,900,1,"iOS対応で難航"),
-          wl(tasks[3],members[0].id,200,6,"反映と確認"),wl(tasks[5],members[0].id,150,2,"構成案作成"),
+          wl(tasks[3],members[0].id,200,6,"反映と確誁E),wl(tasks[5],members[0].id,150,2,"構�E案作�E"),
         ]);
         setBusy(false);
         onSeedDone({creds:memberCreds,email:email.trim().toLowerCase(),pw});
@@ -580,20 +578,20 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
         setBusy(false);
         await doLogin(email,pw);
       }
-    }catch(e){setErr("セットアップに失敗しました: "+e.message);setBusy(false);}
+    }catch(e){setErr("セチE��アチE�Eに失敗しました: "+e.message);setBusy(false);}
   }
   return(
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:440}}>
         <BrandMark/>
-        <p className="text-sm mt-3 mb-1" style={{color:"var(--muted)"}}>チームの稼働とタスクをひとつの帳面に。</p>
-        <h2 className="text-base font-bold mt-4 mb-3 ledger pb-2">初回セットアップ — PMアカウント作成</h2>
-        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郎"/></Field>
+        <p className="text-sm mt-3 mb-1" style={{color:"var(--muted)"}}>チ�Eムの稼働とタスクを�Eとつの帳面に、E/p>
+        <h2 className="text-base font-bold mt-4 mb-3 ledger pb-2">初回セチE��アチE�E  EPMアカウント作�E</h2>
+        <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郁E/></Field>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="pm@example.com"/></Field>
-        <Field label="パスワード (6文字以上)"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
-        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer"><input type="checkbox" checked={seed} onChange={e=>setSeed(e.target.checked)}/>デモデータを投入する</label>
+        <Field label="パスワーチE(6斁E��以丁E"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
+        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer"><input type="checkbox" checked={seed} onChange={e=>setSeed(e.target.checked)}/>チE��チE�Eタを投入する</label>
         {err&&<div className="err mb-3">{err}</div>}
-        <button className="btn btn-p w-full justify-center" disabled={busy} onClick={submit}>{busy?"作成中…":"はじめる"}</button>
+        <button className="btn btn-p w-full justify-center" disabled={busy} onClick={submit}>{busy?"作�E中…":"はじめめE}</button>
       </div>
     </div>
   );
@@ -615,10 +613,10 @@ function SeedDoneView({seedInfo,doLogin}){
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:480}}>
         <BrandMark size={22}/>
-        <h2 className="text-base font-bold mt-5 mb-2">セットアップ完了</h2>
-        <p className="text-sm mb-3" style={{color:"var(--muted)"}}>デモ用メンバーのログイン情報です(この画面でのみ表示)。</p>
+        <h2 className="text-base font-bold mt-5 mb-2">セチE��アチE�E完亁E/h2>
+        <p className="text-sm mb-3" style={{color:"var(--muted)"}}>チE��用メンバ�Eのログイン惁E��でぁEこ�E画面でのみ表示)、E/p>
         <div className="panel p-3 mb-4" style={{background:"var(--panel2)"}}>
-          {seedInfo.creds.map(c=><div key={c.email} className="text-sm mono py-1">{c.name} — {c.email} / {c.pw}</div>)}
+          {seedInfo.creds.map(c=><div key={c.email} className="text-sm mono py-1">{c.name}  E{c.email} / {c.pw}</div>)}
         </div>
         {err&&<div className="err mb-2">{err}</div>}
         <button className="btn btn-p w-full justify-center" disabled={busy} onClick={handleLogin} onTouchEnd={e=>{e.preventDefault();handleLogin();}}>
@@ -633,7 +631,7 @@ function ForcePwView(){
   const {user,updateRow,doLogout,toast}=useApp();
   const [pw,setPw]=useState(""); const [pw2,setPw2]=useState(""); const [err,setErr]=useState("");
   async function submit(){
-    if(pw.length<6){setErr("6文字以上にしてください");return;}
+    if(pw.length<6){setErr("6斁E��以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
     const {error}=await supabase.auth.updateUser({password:pw});
     if(error){setErr(error.message);return;}
@@ -645,11 +643,11 @@ function ForcePwView(){
       <div className="panel p-6 w-full" style={{maxWidth:400}}>
         <BrandMark size={22}/>
         <h2 className="text-base font-bold mt-5 mb-2">初回パスワード変更</h2>
-        <p className="text-sm mb-4" style={{color:"var(--muted)"}}>仮パスワードでログインしています。新しいパスワードを設定してください。</p>
-        <Field label="新しいパスワード"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)}/></Field>
-        <Field label="新しいパスワード (確認)"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
+        <p className="text-sm mb-4" style={{color:"var(--muted)"}}>仮パスワードでログインしてぁE��す。新しいパスワードを設定してください、E/p>
+        <Field label="新しいパスワーチE><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)}/></Field>
+        <Field label="新しいパスワーチE(確誁E"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
         {err&&<div className="err mb-3">{err}</div>}
-        <button className="btn btn-p w-full justify-center" onClick={submit}>設定する</button>
+        <button className="btn btn-p w-full justify-center" onClick={submit}>設定すめE/button>
       </div>
     </div>
   );
@@ -696,8 +694,8 @@ function PageRouter() {
   return <MemberDashboard/>;
 }
 
-const NAV_PM=[{page:"dash",label:"ダッシュボード",icon:Home},{page:"projects",label:"プロジェクト",icon:Briefcase},{page:"requests",label:"申請管理",icon:Inbox},{page:"users",label:"ユーザー管理",icon:Users}];
-const NAV_M=[{page:"mydash",label:"ホーム",icon:Home},{page:"mytasks",label:"マイタスク",icon:ClipboardList},{page:"history",label:"稼働履歴",icon:History}];
+const NAV_PM=[{page:"dash",label:"ダチE��ュボ�EチE,icon:Home},{page:"projects",label:"プロジェクチE,icon:Briefcase},{page:"requests",label:"申請管琁E,icon:Inbox},{page:"users",label:"ユーザー管琁E,icon:Users}];
+const NAV_M=[{page:"mydash",label:"ホ�Eム",icon:Home},{page:"mytasks",label:"マイタスク",icon:ClipboardList},{page:"history",label:"稼働履歴",icon:History}];
 
 function SideNav() {
   const {user,view,nav,db}=useApp();
@@ -713,7 +711,7 @@ function SideNav() {
         </div>
       ))}
       <div className="flex-1"/>
-      <div className="text-xs px-2 pb-1" style={{color:"var(--muted)"}}>{user.role==="PM"?"PMアカウント":"Memberアカウント"}</div>
+      <div className="text-xs px-2 pb-1" style={{color:"var(--muted)"}}>{user.role==="PM"?"PMアカウンチE:"MemberアカウンチE}</div>
     </aside>
   );
 }
@@ -747,8 +745,8 @@ function TopBar() {
       <div className="md:hidden mr-1"><BrandMark size={16}/></div>
       <SearchBox/>
       <div className="flex-1"/>
-      <button className="iconbtn" onClick={async()=>{await refresh();toast("最新のデータを取得しました");}} aria-label="更新"><RefreshCw size={17}/></button>
-      <button className="iconbtn" onClick={()=>setTheme(theme==="light"?"dark":"light")} aria-label="テーマ切替">{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button>
+      <button className="iconbtn" onClick={async()=>{await refresh();toast("最新のチE�Eタを取得しました");}} aria-label="更新"><RefreshCw size={17}/></button>
+      <button className="iconbtn" onClick={()=>setTheme(theme==="light"?"dark":"light")} aria-label="チE�Eマ�E替">{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button>
       <div className="relative">
         <NotifBell onToggle={()=>setTrayOpen(!trayOpen)}/>
         {trayOpen&&<NotifTray onClose={()=>setTrayOpen(false)}/>}
@@ -761,8 +759,8 @@ function TopBar() {
           <div className="panel searchdrop" style={{left:"auto",right:0,width:200,top:42,padding:6}}>
             <div className="px-3 py-2 text-sm font-bold">{user.name}</div>
             <div className="px-3 pb-2 text-xs" style={{color:"var(--muted)"}}>{user.email}</div>
-            <div className="navi" onClick={()=>{setMenuOpen(false);nav("profile");}}><Settings size={15}/>プロフィール設定</div>
-            <div className="navi" onClick={doLogout}><LogOut size={15}/>ログアウト</div>
+            <div className="navi" onClick={()=>{setMenuOpen(false);nav("profile");}}><Settings size={15}/>プロフィール設宁E/div>
+            <div className="navi" onClick={doLogout}><LogOut size={15}/>ログアウチE/div>
           </div>
         )}
       </div>
@@ -821,11 +819,11 @@ function SearchBox() {
     <div className="relative flex-1" style={{maxWidth:380}}>
       <div className="relative">
         <Search size={15} style={{position:"absolute",left:11,top:11,color:"var(--muted)"}}/>
-        <input className="input" style={{paddingLeft:32}} placeholder="プロジェクト・タスクを検索" value={q} onChange={e=>{setQ(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),180)}/>
+        <input className="input" style={{paddingLeft:32}} placeholder="プロジェクト�Eタスクを検索" value={q} onChange={e=>{setQ(e.target.value);setOpen(true);}} onFocus={()=>setOpen(true)} onBlur={()=>setTimeout(()=>setOpen(false),180)}/>
       </div>
       {open&&q.trim()&&(
         <div className="panel searchdrop p-1">
-          {results.projects.length===0&&results.tasks.length===0&&<div className="p-3 text-sm" style={{color:"var(--muted)"}}>該当なし</div>}
+          {results.projects.length===0&&results.tasks.length===0&&<div className="p-3 text-sm" style={{color:"var(--muted)"}}>該当なぁE/div>}
           {results.projects.map(p=><div key={p.id} className="navi" onMouseDown={()=>{isPM?nav("project",{id:p.id}):nav("mytasks");setQ("");}}>
             <Briefcase size={14}/><span className="flex-1 truncate">{p.name}</span><Badge cls={PJ_BADGE[p.status]}>{PJST[p.status]}</Badge>
           </div>)}
@@ -862,7 +860,7 @@ function FloatingTimer() {
 }
 
 /* ============================================================
-   PM: ダッシュボード・プロジェクト一覧・詳細
+   PM: ダチE��ュボ�Eド�Eプロジェクト一覧・詳細
    ============================================================ */
 function PMDashboard() {
   const {db,nav}=useApp();
@@ -876,34 +874,34 @@ function PMDashboard() {
   const members=db.users.filter(u=>u.role==="Member");
   return (
     <div>
-      <PageTitle title="ダッシュボード" sub="チーム全体の稼働状況"/>
+      <PageTitle title="ダチE��ュボ�EチE sub="チ�Eム全体�E稼働状況E/>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="アクティブPJ" value={active.length} unit="件"/>
-        <StatCard label="今週のチーム稼働" value={fmtHM(weekMin)} unit="" mono/>
-        <StatCard label="今週の完了タスク" value={weekDone} unit="件"/>
-        <StatCard label="申請待ち" value={pending.length} unit="件" warn={pending.length>0} onClick={()=>nav("requests")}/>
+        <StatCard label="アクチE��ブPJ" value={active.length} unit="件"/>
+        <StatCard label="今週のチ�Eム稼僁E value={fmtHM(weekMin)} unit="" mono/>
+        <StatCard label="今週の完亁E��スク" value={weekDone} unit="件"/>
+        <StatCard label="申請征E��" value={pending.length} unit="件" warn={pending.length>0} onClick={()=>nav("requests")}/>
       </div>
       {(alerts90.length>0||overdue.length>0||pending.length>0)&&(
         <section className="panel p-4 mb-6">
-          <SecTitle icon={AlertTriangle} title="アラート" tone="var(--amber)"/>
+          <SecTitle icon={AlertTriangle} title="アラーチE tone="var(--amber)"/>
           <div className="flex flex-col gap-2">
-            {overdue.map(t=><AlertRow key={"o"+t.id} tone="red" text={`期日超過: 「${t.title}」 (期日 ${t.deadline})`} onClick={()=>nav("project",{id:t.project_id})}/>)}
-            {alerts90.map(t=>{const w=workedMin(db.worklogs,t.id);const over=w>=t.max_minutes;return <AlertRow key={"a"+t.id} tone={over?"red":"amber"} text={`${over?"上限超過":"90%超過"}: 「${t.title}」 ${fmtHM(w)} / ${fmtHM(t.max_minutes)}`} onClick={()=>nav("project",{id:t.project_id})}/>;})}
-            {pending.length>0&&<AlertRow tone="blue" text={`未処理の申請が ${pending.length} 件あります`} onClick={()=>nav("requests")}/>}
+            {overdue.map(t=><AlertRow key={"o"+t.id} tone="red" text={`期日趁E��: 、E{t.title}、E(期日 ${t.deadline})`} onClick={()=>nav("project",{id:t.project_id})}/>)}
+            {alerts90.map(t=>{const w=workedMin(db.worklogs,t.id);const over=w>=t.max_minutes;return <AlertRow key={"a"+t.id} tone={over?"red":"amber"} text={`${over?"上限趁E��":"90%趁E��"}: 、E{t.title}、E${fmtHM(w)} / ${fmtHM(t.max_minutes)}`} onClick={()=>nav("project",{id:t.project_id})}/>;})}
+            {pending.length>0&&<AlertRow tone="blue" text={`未処琁E�E申請が ${pending.length} 件あります`} onClick={()=>nav("requests")}/>}
           </div>
         </section>
       )}
       <section className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold m-0">アクティブプロジェクト</h2>
+          <h2 className="text-sm font-bold m-0">アクチE��ブ�EロジェクチE/h2>
           <button className="btn btn-sm" onClick={()=>nav("projects")}>すべて見る<ChevronRight size={13}/></button>
         </div>
-        {active.length===0?<div className="panel"><Empty icon={Briefcase} text="アクティブなプロジェクトがありません"/></div>:(
+        {active.length===0?<div className="panel"><Empty icon={Briefcase} text="アクチE��ブなプロジェクトがありません"/></div>:(
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{active.map(p=><ProjectCard key={p.id} p={p}/>)}</div>
         )}
       </section>
       <section className="panel p-4">
-        <SecTitle icon={Clock} title="メンバー稼働ヒートマップ (直近7日)"/>
+        <SecTitle icon={Clock} title="メンバ�E稼働ヒート�EチE�E (直迁E日)"/>
         <Heatmap members={members} logs={db.worklogs}/>
       </section>
     </div>
@@ -913,7 +911,7 @@ function PMDashboard() {
 function Heatmap({members,logs}) {
   const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-i));return d;});
   const cell=(u,d)=>{const s=d.getTime(),e=s+864e5;return logs.filter(l=>l.user_id===u.id&&l.started_at>=s&&l.started_at<e).reduce((a,l)=>a+l.duration_min,0);};
-  if(members.length===0) return <Empty icon={Users} text="メンバーがいません"/>;
+  if(members.length===0) return <Empty icon={Users} text="メンバ�Eがいません"/>;
   return (
     <div style={{overflowX:"auto"}}>
       <div style={{minWidth:460}}>
@@ -923,9 +921,9 @@ function Heatmap({members,logs}) {
         {members.map(u=>(
           <div key={u.id} className="grid gap-1 mb-1 items-center" style={{gridTemplateColumns:"120px repeat(7, 1fr)"}}>
             <div className="flex items-center gap-2 text-xs truncate"><Avatar user={u} size={20}/>{u.name}</div>
-            {days.map((d,i)=>{const m=cell(u,d);const alpha=m<=0?0:Math.min(0.95,0.18+(m/480)*0.8);return <div key={i} className="hcell" title={`${u.name} ${d.getMonth()+1}/${d.getDate()} — ${fmtHM(m)}`} style={m>0?{background:`color-mix(in srgb, var(--ai) ${Math.round(alpha*100)}%, var(--panel2))`}:{}}/>;})}</div>
+            {days.map((d,i)=>{const m=cell(u,d);const alpha=m<=0?0:Math.min(0.95,0.18+(m/480)*0.8);return <div key={i} className="hcell" title={`${u.name} ${d.getMonth()+1}/${d.getDate()}  E${fmtHM(m)}`} style={m>0?{background:`color-mix(in srgb, var(--ai) ${Math.round(alpha*100)}%, var(--panel2))`}:{}}/>;})}</div>
         ))}
-        <div className="text-xs mt-2" style={{color:"var(--muted)"}}>色が濃いほど稼働時間が長い(8h基準)</div>
+        <div className="text-xs mt-2" style={{color:"var(--muted)"}}>色が濁E��ほど稼働時間が長ぁE8h基溁E</div>
       </div>
     </div>
   );
@@ -943,12 +941,12 @@ function ProjectCard({p}) {
       </div>
       <div className="flex items-center justify-between text-xs mb-1" style={{color:"var(--muted)"}}><span>予算消化</span><span className="mono">{Math.round(st.consumedRate*100)}%</span></div>
       <Prog ratio={st.consumedRate}/>
-      <div className="flex items-center justify-between text-xs mt-2 mb-1" style={{color:"var(--muted)"}}><span>タスク完了</span><span className="mono">{st.done}/{st.total}</span></div>
+      <div className="flex items-center justify-between text-xs mt-2 mb-1" style={{color:"var(--muted)"}}><span>タスク完亁E/span><span className="mono">{st.done}/{st.total}</span></div>
       <Prog ratio={st.progress} tone="ok"/>
       <div className="flex items-center justify-between mt-3">
         <div className="flex" style={{paddingLeft:4}}>{members.slice(0,5).map(m=><span key={m.id} style={{marginLeft:-6}}><Avatar user={m} size={24}/></span>)}{members.length>5&&<span className="text-xs ml-1" style={{color:"var(--muted)"}}>+{members.length-5}</span>}</div>
         <div className="flex items-center gap-2 text-xs" style={{color:"var(--muted)"}}>
-          {p.notion_url&&<a href={p.notion_url} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} title="Notionを開く"><Link2 size={13}/></a>}
+          {p.notion_url&&<a href={p.notion_url} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} title="Notionを開ぁE><Link2 size={13}/></a>}
           <Calendar size={12}/>〜{fmtDate(p.end_date)}
         </div>
       </div>
@@ -963,8 +961,8 @@ function ProjectsView() {
   const list=db.projects.filter(p=>filter==="all"||p.status===filter).sort((a,b)=>b.created_at-a.created_at);
   return (
     <div>
-      <PageTitle title="プロジェクト" sub={`全 ${db.projects.length} 件`} right={<button className="btn btn-p" onClick={()=>setForm({})}><Plus size={15}/>新規プロジェクト</button>}/>
-      <div className="mb-4"><Seg value={filter} onChange={setFilter} options={[{value:"all",label:"すべて"},{value:"active",label:"進行中"},{value:"paused",label:"一時停止"},{value:"completed",label:"完了"}]}/></div>
+      <PageTitle title="プロジェクチE sub={`全 ${db.projects.length} 件`} right={<button className="btn btn-p" onClick={()=>setForm({})}><Plus size={15}/>新規�EロジェクチE/button>}/>
+      <div className="mb-4"><Seg value={filter} onChange={setFilter} options={[{value:"all",label:"すべて"},{value:"active",label:"進行中"},{value:"paused",label:"一時停止"},{value:"completed",label:"完亁E}]}/></div>
       {list.length===0?<div className="panel"><Empty icon={Briefcase} text="プロジェクトがありません"/></div>:(
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{list.map(p=><ProjectCard key={p.id} p={p}/>)}</div>
       )}
@@ -981,12 +979,12 @@ function ProjectForm({initial, onClose}) {
   function toggleMember(id){set("member_ids",f.member_ids.includes(id)?f.member_ids.filter(x=>x!==id):[...f.member_ids,id]);}
   async function submit() {
     const e={};
-    if(!f.name.trim()) e.name="プロジェクト名は必須です";
-    if(!f.description.trim()) e.description="説明は必須です";
-    if(!(Number(f.budget)>0)) e.budget="総予算(円)を入力してください";
-    if(!f.start_date) e.start_date="開始日は必須です";
-    if(!f.end_date) e.end_date="終了日は必須です";
-    if(f.start_date&&f.end_date&&f.end_date<f.start_date) e.end_date="終了日は開始日以降にしてください";
+    if(!f.name.trim()) e.name="プロジェクト名は忁E��でぁE;
+    if(!f.description.trim()) e.description="説明�E忁E��でぁE;
+    if(!(Number(f.budget)>0)) e.budget="総予箁E冁Eを�E力してください";
+    if(!f.start_date) e.start_date="開始日は忁E��でぁE;
+    if(!f.end_date) e.end_date="終亁E��は忁E��でぁE;
+    if(f.start_date&&f.end_date&&f.end_date<f.start_date) e.end_date="終亁E��は開始日以降にしてください";
     setErrs(e); if(Object.keys(e).length) return;
     const data={...f,budget:Number(f.budget)};
     if(initial){
@@ -995,35 +993,35 @@ function ProjectForm({initial, onClose}) {
     } else {
       const row={...data,id:uid(),created_at:Date.now()};
       await insertRow("projects",row);
-      await notifyUsers(f.member_ids,"system",`プロジェクト「${f.name}」に追加されました`);
-      toast("プロジェクトを作成しました");
+      await notifyUsers(f.member_ids,"system",`プロジェクト、E{f.name}」に追加されました`);
+      toast("プロジェクトを作�Eしました");
     }
     onClose();
   }
   return (
-    <Modal open onClose={onClose} title={initial?"プロジェクトを編集":"新規プロジェクト"}>
+    <Modal open onClose={onClose} title={initial?"プロジェクトを編雁E:"新規�EロジェクチE}>
       <Field label="プロジェクト名 *" error={errs.name}><input className="input" value={f.name} onChange={e=>set("name",e.target.value)}/></Field>
-      <Field label="説明・概要 *" error={errs.description}><textarea className="textarea" value={f.description} onChange={e=>set("description",e.target.value)}/></Field>
+      <Field label="説明�E概要E*" error={errs.description}><textarea className="textarea" value={f.description} onChange={e=>set("description",e.target.value)}/></Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="総予算 (円) *" error={errs.budget}><input type="number" className="input num" value={f.budget} onChange={e=>set("budget",e.target.value)}/></Field>
-        <Field label="ステータス"><select className="select" value={f.status} onChange={e=>set("status",e.target.value)}><option value="active">進行中</option><option value="paused">一時停止</option><option value="completed">完了</option></select></Field>
+        <Field label="総予箁E(冁E *" error={errs.budget}><input type="number" className="input num" value={f.budget} onChange={e=>set("budget",e.target.value)}/></Field>
+        <Field label="スチE�Eタス"><select className="select" value={f.status} onChange={e=>set("status",e.target.value)}><option value="active">進行中</option><option value="paused">一時停止</option><option value="completed">完亁E/option></select></Field>
         <Field label="開始日 *" error={errs.start_date}><input type="date" className="input" value={f.start_date} onChange={e=>set("start_date",e.target.value)}/></Field>
-        <Field label="終了日 *" error={errs.end_date}><input type="date" className="input" value={f.end_date} onChange={e=>set("end_date",e.target.value)}/></Field>
+        <Field label="終亁E�� *" error={errs.end_date}><input type="date" className="input" value={f.end_date} onChange={e=>set("end_date",e.target.value)}/></Field>
       </div>
-      <Field label="参加メンバー" hint="タップで選択/解除">
+      <Field label="参加メンバ�E" hint="タチE�Eで選抁E解除">
         <div className="flex flex-wrap gap-2">{db.users.map(m=><button key={m.id} className={"chip"+(f.member_ids.includes(m.id)?" on":"")} onClick={()=>toggleMember(m.id)}>{m.name}{m.role==="PM"?" (PM)":""}</button>)}</div>
       </Field>
-      <Field label="Notion連携 (任意)"><input className="input" placeholder="https://www.notion.so/..." value={f.notion_url||""} onChange={e=>set("notion_url",e.target.value)}/></Field>
+      <Field label="Notion連携 (任愁E"><input className="input" placeholder="https://www.notion.so/..." value={f.notion_url||""} onChange={e=>set("notion_url",e.target.value)}/></Field>
       <div className="flex justify-end gap-2 mt-4">
         <button className="btn" onClick={onClose}>キャンセル</button>
-        <button className="btn btn-p" onClick={submit}>{initial?"保存する":"作成する"}</button>
+        <button className="btn btn-p" onClick={submit}>{initial?"保存すめE:"作�Eする"}</button>
       </div>
     </Modal>
   );
 }
 
 /* ============================================================
-   PM: プロジェクト詳細・タスク管理・LLM生成
+   PM: プロジェクト詳細・タスク管琁E�ELLM生�E
    ============================================================ */
 function ProjectDetail({id, tab}) {
   const {db,nav}=useApp();
@@ -1032,20 +1030,20 @@ function ProjectDetail({id, tab}) {
   const p=db.projects.find(x=>x.id===id);
   if(!p) return <div><PageTitle title="プロジェクトが見つかりません" back={()=>nav("projects")}/></div>;
   const st=projectStats(p,db.tasks,db.worklogs);
-  const tabs=[["tasks","タスク一覧"],["members","メンバー稼働"],["budget","予算管理"],["settings","設定"]];
+  const tabs=[["tasks","タスク一覧"],["members","メンバ�E稼僁E],["budget","予算管琁E],["settings","設宁E]];
   return (
     <div>
-      <PageTitle back={()=>nav("projects")} title={p.name} sub={`${p.start_date||"?"} 〜 ${p.end_date||"?"}`}
+      <PageTitle back={()=>nav("projects")} title={p.name} sub={`${p.start_date||"?"} 、E${p.end_date||"?"}`}
         right={<div className="flex gap-2 items-center flex-wrap">
           {p.notion_url&&<a className="btn btn-sm" href={p.notion_url} target="_blank" rel="noreferrer"><Link2 size={13}/>Notion</a>}
-          <button className="btn btn-sm" onClick={()=>setCsvOpen(true)}><Download size={13}/>レポート出力</button>
+          <button className="btn btn-sm" onClick={()=>setCsvOpen(true)}><Download size={13}/>レポ�Eト�E劁E/button>
           <Badge cls={PJ_BADGE[p.status]} dot>{PJST[p.status]}</Badge>
         </div>}/>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <StatCard label="総予算" value={fmtYen(p.budget)} unit="" mono/>
-        <StatCard label="未配分予算" value={fmtYen(st.remain)} unit="" mono warn={st.remain<0}/>
+        <StatCard label="総予箁E value={fmtYen(p.budget)} unit="" mono/>
+        <StatCard label="未配�E予箁E value={fmtYen(st.remain)} unit="" mono warn={st.remain<0}/>
         <StatCard label="予算消化" value={Math.round(st.consumedRate*100)+"%"} unit="" mono/>
-        <StatCard label="タスク進捗" value={`${st.done}/${st.total}`} unit="完了" mono/>
+        <StatCard label="タスク進捁E value={`${st.done}/${st.total}`} unit="完亁E mono/>
       </div>
       <div className="flex gap-1 mb-4" style={{borderBottom:"3px double var(--border)",overflowX:"auto"}}>
         {tabs.map(([k,l])=>(
@@ -1072,7 +1070,7 @@ function TasksTab({p}) {
   const [llmOpen,setLlmOpen]=useState(false);
   const [openTask,setOpenTask]=useState(null);
   const tasks=db.tasks.filter(t=>t.project_id===p.id);
-  const uname=id=>{const u=db.users.find(x=>x.id===id);return u?u.name:"未割当";};
+  const uname=id=>{const u=db.users.find(x=>x.id===id);return u?u.name:"未割彁E;};
   const prOrder={high:0,medium:1,low:2};
   const rows=useMemo(()=>{
     let list=tasks.map(t=>{const worked=workedMin(db.worklogs,t.id);const ratio=taskRatio(t,worked);return{t,worked,ratio,remain:(t.budget||0)*(1-ratio),warn90:t.status!=="done"&&t.max_minutes>0&&worked>=t.max_minutes*0.9};});
@@ -1088,7 +1086,7 @@ function TasksTab({p}) {
     });
     return list;
   },[tasks,db.worklogs,q,stF,asF,sort,db.users]);
-  const th=(key,label)=><th className="sort" onClick={()=>setSort(s=>({key,dir:s.key===key?-s.dir:1}))}>{label}{sort.key===key?(sort.dir===1?" ↑":" ↓"):""}</th>;
+  const th=(key,label)=><th className="sort" onClick={()=>setSort(s=>({key,dir:s.key===key?-s.dir:1}))}>{label}{sort.key===key?(sort.dir===1?" ↁE:" ↁE):""}</th>;
   const assignees=[...new Set(tasks.map(t=>t.assigned_user_id).filter(Boolean))].map(id=>db.users.find(u=>u.id===id)).filter(Boolean);
   return (
     <div>
@@ -1098,29 +1096,29 @@ function TasksTab({p}) {
           <input className="input" style={{paddingLeft:30}} placeholder="タスク検索" value={q} onChange={e=>setQ(e.target.value)}/>
         </div>
         <select className="select" style={{width:"auto"}} value={stF} onChange={e=>setStF(e.target.value)}>
-          <option value="all">全ステータス</option><option value="todo">未着手</option><option value="in_progress">進行中</option><option value="done">完了</option>
+          <option value="all">全スチE�Eタス</option><option value="todo">未着扁E/option><option value="in_progress">進行中</option><option value="done">完亁E/option>
         </select>
         <select className="select" style={{width:"auto"}} value={asF} onChange={e=>setAsF(e.target.value)}>
-          <option value="all">全担当</option><option value="none">未割当</option>
+          <option value="all">全拁E��E/option><option value="none">未割彁E/option>
           {assignees.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}
         </select>
         <div className="flex-1"/>
-        <button className="btn" onClick={()=>setLlmOpen(true)}><Sparkles size={14}/>LLMと相談して作成</button>
+        <button className="btn" onClick={()=>setLlmOpen(true)}><Sparkles size={14}/>LLMと相諁E��て作�E</button>
         <button className="btn btn-p" onClick={()=>setForm({})}><Plus size={14}/>新規タスク</button>
       </div>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:880}}>
-          <thead><tr><th>#</th>{th("title","タスク名")}{th("assignee","担当")}{th("priority","優先度")}{th("budget","予算")}{th("max_minutes","稼働上限")}{th("deadline","期日")}{th("status","ステータス")}{th("worked","稼働済")}{th("remain","残予算")}</tr></thead>
+          <thead><tr><th>#</th>{th("title","タスク吁E)}{th("assignee","拁E��E)}{th("priority","優先度")}{th("budget","予箁E)}{th("max_minutes","稼働上限")}{th("deadline","期日")}{th("status","スチE�Eタス")}{th("worked","稼働渁E)}{th("remain","残予箁E)}</tr></thead>
           <tbody>
             {rows.map((r,i)=>(
               <tr key={r.t.id} className={"click"+(r.warn90?" warn90":"")} onClick={()=>setOpenTask(r.t)}>
                 <td className="num" style={{color:"var(--muted)"}}>{i+1}</td>
                 <td className="font-medium"><span className="flex items-center gap-2">{r.warn90&&<AlertTriangle size={13} style={{color:r.worked>=r.t.max_minutes?"var(--red)":"var(--amber)",flexShrink:0}}/>}{r.t.title}</span></td>
-                <td>{r.t.assigned_user_id?<span className="flex items-center gap-2"><Avatar user={db.users.find(u=>u.id===r.t.assigned_user_id)} size={20}/>{uname(r.t.assigned_user_id)}</span>:<Badge cls="b-slate">未割当</Badge>}</td>
+                <td>{r.t.assigned_user_id?<span className="flex items-center gap-2"><Avatar user={db.users.find(u=>u.id===r.t.assigned_user_id)} size={20}/>{uname(r.t.assigned_user_id)}</span>:<Badge cls="b-slate">未割彁E/Badge>}</td>
                 <td><Badge cls={PR_BADGE[r.t.priority]}>{PR[r.t.priority]}</Badge></td>
                 <td className="num">{fmtYen(r.t.budget)}</td>
                 <td className="num">{fmtHM(r.t.max_minutes)}</td>
-                <td className="num" style={r.t.status!=="done"&&daysUntil(r.t.deadline)<0?{color:"var(--red)",fontWeight:700}:{}}>{r.t.deadline||"—"}</td>
+                <td className="num" style={r.t.status!=="done"&&daysUntil(r.t.deadline)<0?{color:"var(--red)",fontWeight:700}:{}}>{r.t.deadline||" E}</td>
                 <td><Badge cls={ST_BADGE[r.t.status]} dot>{ST[r.t.status]}</Badge></td>
                 <td className="num">{fmtHM(r.worked)}</td>
                 <td className="num">{fmtYen(r.remain)}</td>
@@ -1148,49 +1146,49 @@ function TaskForm({p, initial, onClose}) {
   const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id)||u.id===f.assigned_user_id);
   async function submit() {
     const e={};
-    if(!f.title.trim()) e.title="タスク名は必須です";
-    if(!f.goal.trim()) e.goal="目標・ノルマは必須です";
-    if(!(Number(f.budget)>=0)||f.budget==="") e.budget="予算(円)を入力してください";
+    if(!f.title.trim()) e.title="タスク名�E忁E��でぁE;
+    if(!f.goal.trim()) e.goal="目標�Eノルマ�E忁E��でぁE;
+    if(!(Number(f.budget)>=0)||f.budget==="") e.budget="予箁E冁Eを�E力してください";
     const mm=(Number(f.maxH)||0)*60+(Number(f.maxM)||0);
-    if(mm<=0) e.maxH="稼働時間上限を入力してください";
-    if(!f.deadline) e.deadline="期日は必須です";
+    if(mm<=0) e.maxH="稼働時間上限を�E力してください";
+    if(!f.deadline) e.deadline="期日は忁E��でぁE;
     setErrs(e); if(Object.keys(e).length) return;
     const base={title:f.title.trim(),description:f.description,goal:f.goal.trim(),assigned_user_id:f.assigned_user_id||null,priority:f.priority,budget:Number(f.budget),max_minutes:mm,deadline:f.deadline};
     if(initial){
       await updateRow("tasks",{id:initial.id},{...base,status:f.status,completed_at:f.status==="done"?(initial.completed_at||Date.now()):null});
       if(base.assigned_user_id&&base.assigned_user_id!==initial.assigned_user_id)
-        await notifyUsers([base.assigned_user_id],"assign",`タスク「${base.title}」が割り当てられました (${p.name})`,{email:true});
+        await notifyUsers([base.assigned_user_id],"assign",`タスク、E{base.title}」が割り当てられました (${p.name})`,{email:true});
       toast("タスクを更新しました");
     } else {
       await insertRow("tasks",{...base,id:uid(),project_id:p.id,status:"todo",created_at:Date.now()});
-      if(base.assigned_user_id) await notifyUsers([base.assigned_user_id],"assign",`タスク「${base.title}」が割り当てられました (${p.name})`,{email:true});
-      toast("タスクを作成しました");
+      if(base.assigned_user_id) await notifyUsers([base.assigned_user_id],"assign",`タスク、E{base.title}」が割り当てられました (${p.name})`,{email:true});
+      toast("タスクを作�Eしました");
     }
     onClose();
   }
   return (
-    <Modal open onClose={onClose} title={initial?"タスクを編集":"新規タスク"}>
-      {budgetOver&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm mb-3" style={{background:"var(--amber-bg)",color:"var(--amber)"}}><AlertTriangle size={15}/>予算がプロジェクト未配分額を超過します (未配分: {fmtYen(st.remain)})</div>}
-      {deadlineOver&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm mb-3" style={{background:"var(--amber-bg)",color:"var(--amber)"}}><AlertTriangle size={15}/>期日がプロジェクト終了日を超えています</div>}
-      <Field label="タスク名 *" error={errs.title}><input className="input" value={f.title} onChange={e=>set("title",e.target.value)}/></Field>
-      <Field label="説明"><textarea className="textarea" value={f.description||""} onChange={e=>set("description",e.target.value)}/></Field>
-      <Field label="目標・ノルマ *" error={errs.goal}><textarea className="textarea" style={{minHeight:60}} value={f.goal} onChange={e=>set("goal",e.target.value)}/></Field>
+    <Modal open onClose={onClose} title={initial?"タスクを編雁E:"新規タスク"}>
+      {budgetOver&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm mb-3" style={{background:"var(--amber-bg)",color:"var(--amber)"}}><AlertTriangle size={15}/>予算がプロジェクト未配�E額を趁E��しまぁE(未配�E: {fmtYen(st.remain)})</div>}
+      {deadlineOver&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm mb-3" style={{background:"var(--amber-bg)",color:"var(--amber)"}}><AlertTriangle size={15}/>期日が�Eロジェクト終亁E��を趁E��てぁE��ぁE/div>}
+      <Field label="タスク吁E*" error={errs.title}><input className="input" value={f.title} onChange={e=>set("title",e.target.value)}/></Field>
+      <Field label="説昁E><textarea className="textarea" value={f.description||""} onChange={e=>set("description",e.target.value)}/></Field>
+      <Field label="目標�EノルチE*" error={errs.goal}><textarea className="textarea" style={{minHeight:60}} value={f.goal} onChange={e=>set("goal",e.target.value)}/></Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="担当メンバー"><select className="select" value={f.assigned_user_id||""} onChange={e=>set("assigned_user_id",e.target.value)}><option value="">未割当</option>{candidates.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></Field>
-        <Field label="優先度"><select className="select" value={f.priority} onChange={e=>set("priority",e.target.value)}><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></Field>
-        <Field label="予算 (円) *" error={errs.budget}><input type="number" className="input num" value={f.budget} onChange={e=>set("budget",e.target.value)}/></Field>
+        <Field label="拁E��メンバ�E"><select className="select" value={f.assigned_user_id||""} onChange={e=>set("assigned_user_id",e.target.value)}><option value="">未割彁E/option>{candidates.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></Field>
+        <Field label="優先度"><select className="select" value={f.priority} onChange={e=>set("priority",e.target.value)}><option value="high">髁E/option><option value="medium">中</option><option value="low">佁E/option></select></Field>
+        <Field label="予箁E(冁E *" error={errs.budget}><input type="number" className="input num" value={f.budget} onChange={e=>set("budget",e.target.value)}/></Field>
         <Field label="期日 *" error={errs.deadline}><input type="date" className="input" value={f.deadline} onChange={e=>set("deadline",e.target.value)}/></Field>
         <Field label="稼働時間上限 *" error={errs.maxH}>
           <div className="flex items-center gap-2">
             <input type="number" min="0" className="input num" style={{width:80}} value={f.maxH} onChange={e=>set("maxH",e.target.value)}/><span className="text-xs">時間</span>
-            <input type="number" min="0" max="59" className="input num" style={{width:70}} value={f.maxM} onChange={e=>set("maxM",e.target.value)}/><span className="text-xs">分</span>
+            <input type="number" min="0" max="59" className="input num" style={{width:70}} value={f.maxM} onChange={e=>set("maxM",e.target.value)}/><span className="text-xs">刁E/span>
           </div>
         </Field>
-        {initial&&<Field label="ステータス"><select className="select" value={f.status} onChange={e=>set("status",e.target.value)}><option value="todo">未着手</option><option value="in_progress">進行中</option><option value="done">完了</option></select></Field>}
+        {initial&&<Field label="スチE�Eタス"><select className="select" value={f.status} onChange={e=>set("status",e.target.value)}><option value="todo">未着扁E/option><option value="in_progress">進行中</option><option value="done">完亁E/option></select></Field>}
       </div>
       <div className="flex justify-end gap-2 mt-4">
         <button className="btn" onClick={onClose}>キャンセル</button>
-        <button className="btn btn-p" onClick={submit}>{initial?"保存する":"作成する"}</button>
+        <button className="btn btn-p" onClick={submit}>{initial?"保存すめE:"作�Eする"}</button>
       </div>
     </Modal>
   );
@@ -1204,7 +1202,7 @@ function PMTaskModal({taskId, onEdit, onClose}) {
   const worked=workedMin(db.worklogs,t.id);
   const assignee=db.users.find(u=>u.id===t.assigned_user_id);
   async function del() {
-    if(!(await ask(`タスク「${t.title}」を削除しますか？`))) return;
+    if(!(await ask(`タスク、E{t.title}」を削除しますか�E�`))) return;
     await deleteRow("tasks",{id:t.id});
     toast("タスクを削除しました"); onClose();
   }
@@ -1215,15 +1213,15 @@ function PMTaskModal({taskId, onEdit, onClose}) {
         <div className="flex gap-2 items-center"><Badge cls={PR_BADGE[t.priority]}>{PR[t.priority]}</Badge><Badge cls={ST_BADGE[t.status]} dot>{ST[t.status]}</Badge></div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-4">
-        <MiniStat label="担当" value={assignee?assignee.name:"未割当"}/>
-        <MiniStat label="期日" value={t.deadline||"—"}/>
-        <MiniStat label="稼働 / 上限" value={`${fmtHM(worked)} / ${fmtHM(t.max_minutes)}`} mono warn={t.max_minutes>0&&worked>=t.max_minutes*0.9}/>
-        <MiniStat label="予算" value={fmtYen(t.budget)} mono/>
+        <MiniStat label="拁E��E value={assignee?assignee.name:"未割彁E}/>
+        <MiniStat label="期日" value={t.deadline||" E}/>
+        <MiniStat label="稼僁E/ 上限" value={`${fmtHM(worked)} / ${fmtHM(t.max_minutes)}`} mono warn={t.max_minutes>0&&worked>=t.max_minutes*0.9}/>
+        <MiniStat label="予箁E value={fmtYen(t.budget)} mono/>
       </div>
       <Prog ratio={t.max_minutes>0?worked/t.max_minutes:0}/>
-      {t.description&&<div className="mt-4"><div className="lbl">説明</div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.description}</div></div>}
-      <div className="mt-3 p-3 rounded-lg" style={{background:"var(--ai-soft)"}}><div className="lbl" style={{color:"var(--ai)"}}>目標・ノルマ</div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.goal||"—"}</div></div>
-      {t.completion_comment&&<div className="mt-3 p-3 rounded-lg" style={{background:"var(--green-bg)"}}><div className="lbl" style={{color:"var(--green)"}}>完了コメント</div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.completion_comment}</div></div>}
+      {t.description&&<div className="mt-4"><div className="lbl">説昁E/div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.description}</div></div>}
+      <div className="mt-3 p-3 rounded-lg" style={{background:"var(--ai-soft)"}}><div className="lbl" style={{color:"var(--ai)"}}>目標�EノルチE/div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.goal||" E}</div></div>
+      {t.completion_comment&&<div className="mt-3 p-3 rounded-lg" style={{background:"var(--green-bg)"}}><div className="lbl" style={{color:"var(--green)"}}>完亁E��メンチE/div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.completion_comment}</div></div>}
       <div className="mt-4"><div className="lbl">稼働ログ ({logs.length}件)</div>
         {logs.length===0?<div className="text-sm" style={{color:"var(--muted)"}}>まだ記録がありません</div>:(
           <div className="panel" style={{maxHeight:180,overflowY:"auto"}}>
@@ -1240,7 +1238,7 @@ function PMTaskModal({taskId, onEdit, onClose}) {
       <CommentThread task={t}/>
       <div className="flex justify-between gap-2 mt-5">
         <button className="btn btn-d" onClick={del}><Trash2 size={14}/>削除</button>
-        <div className="flex gap-2"><button className="btn" onClick={onClose}>閉じる</button><button className="btn btn-p" onClick={()=>onEdit(t)}><Edit2 size={14}/>編集</button></div>
+        <div className="flex gap-2"><button className="btn" onClick={onClose}>閉じめE/button><button className="btn btn-p" onClick={()=>onEdit(t)}><Edit2 size={14}/>編雁E/button></div>
       </div>
     </Modal>
   );
@@ -1257,12 +1255,12 @@ function CommentThread({task}) {
     const targets=new Set(mentioned.map(u=>u.id));
     if(task.assigned_user_id&&task.assigned_user_id!==user.id) targets.add(task.assigned_user_id);
     if(user.role!=="PM") db.users.filter(u=>u.role==="PM"&&!u.pending).forEach(u=>targets.add(u.id));
-    await notifyUsers([...targets],"mention",`${user.name} が「${task.title}」にコメントしました: ${body.slice(0,40)}${body.length>40?"…":""}`);
+    await notifyUsers([...targets],"mention",`${user.name} が、E{task.title}」にコメントしました: ${body.slice(0,40)}${body.length>40?"…":""}`);
     setText(""); toast("コメントを送信しました");
   }
   return (
     <div className="mt-4">
-      <div className="lbl">コメント ({comments.length})</div>
+      <div className="lbl">コメンチE({comments.length})</div>
       {comments.length>0&&<div className="flex flex-col gap-2 mb-2" style={{maxHeight:200,overflowY:"auto"}}>
         {comments.map(c=>{const u=db.users.find(x=>x.id===c.user_id);return(
           <div key={c.id} className="flex gap-2"><Avatar user={u} size={24}/>
@@ -1280,7 +1278,7 @@ function CommentThread({task}) {
   );
 }
 
-const LLM_JSON_SPEC=`[{"title":"タスク名","description":"詳細説明","goal":"目標・ノルマ","assigned_member":"メンバー名またはメールアドレス","priority":"high|medium|low","budget":50000,"max_hours":20,"deadline":"YYYY-MM-DD"}]`;
+const LLM_JSON_SPEC=`[{"title":"タスク吁E,"description":"詳細説昁E,"goal":"目標�EノルチE,"assigned_member":"メンバ�E名また�Eメールアドレス","priority":"high|medium|low","budget":50000,"max_hours":20,"deadline":"YYYY-MM-DD"}]`;
 function matchMember(s,users){if(!s)return null;const q=String(s).trim().toLowerCase();if(!q)return null;return users.find(x=>x.email.toLowerCase()===q)||users.find(x=>x.name.toLowerCase()===q)||users.find(x=>x.name.toLowerCase().replace(/\s+/g,"")===q.replace(/\s+/g,""))||users.find(x=>x.name.toLowerCase().includes(q))||null;}
 
 function LLMModal({p, onClose}) {
@@ -1291,39 +1289,39 @@ function LLMModal({p, onClose}) {
   const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id));
   const st=projectStats(p,db.tasks,db.worklogs);
   useEffect(()=>{chatEnd.current&&chatEnd.current.scrollIntoView({behavior:"smooth"});},[chat,loading]);
-  const sysPrompt=()=>`あなたはPM支援AIです。以下のJSON配列【のみ】で回答してください(説明文不要):\n${LLM_JSON_SPEC}\n制約: assigned_memberは${candidates.map(u=>u.name).join(",")||"なし"}のみ。deadline: ${todayStr()}〜${p.end_date||"未設定"}。budgetの合計は${Math.max(0,st.remain)}円以内の目安。\nプロジェクト: ${p.name}: ${p.description}`;
+  const sysPrompt=()=>`あなた�EPM支援AIです。以下�EJSON配�E【�Eみ】で回答してください(説明文不要E:\n${LLM_JSON_SPEC}\n制紁E assigned_memberは${candidates.map(u=>u.name).join(",")||"なぁE}のみ。deadline: ${todayStr()}、E{p.end_date||"未設宁E}。budgetの合計�E${Math.max(0,st.remain)}冁E��冁E�E目安、EnプロジェクチE ${p.name}: ${p.description}`;
   function normalize(arr){return(Array.isArray(arr)?arr:[]).map(r=>{const m=matchMember(r.assigned_member,candidates);return{_k:uid(),title:String(r.title||"").slice(0,100),description:String(r.description||""),goal:String(r.goal||""),assigned_user_id:m?m.id:"",unmatched:!!(r.assigned_member&&String(r.assigned_member).trim()&&!m),priority:["high","medium","low"].includes(r.priority)?r.priority:"medium",budget:Math.max(0,Number(r.budget)||0),max_hours:Math.max(0,Number(r.max_hours)||0),deadline:/^\d{4}-\d{2}-\d{2}$/.test(String(r.deadline||""))?r.deadline:""};}).filter(r=>r.title);}
   async function send(){const msg=input.trim();if(!msg||loading)return;setErr("");setInput("");const nextChat=[...chat,{role:"user",content:msg}];setChat(nextChat);setLoading(true);
-    try{const data=await callClaude([{role:"user",content:sysPrompt()},{role:"assistant",content:"了解しました。JSON配列のみで回答します。"},...nextChat],{max_tokens:1000});const text=textOf(data);setChat(c=>[...c,{role:"assistant",content:text}]);try{const rows=normalize(parseJsonArray(text));if(rows.length)setPreview(rows);else setErr("タスクを抽出できませんでした");}catch(e2){setErr("JSONの解析に失敗しました");}}catch(e){setErr(e.message||"APIエラー");}
+    try{const data=await callClaude([{role:"user",content:sysPrompt()},{role:"assistant",content:"亁E��しました、ESON配�Eのみで回答します、E},...nextChat],{max_tokens:1000});const text=textOf(data);setChat(c=>[...c,{role:"assistant",content:text}]);try{const rows=normalize(parseJsonArray(text));if(rows.length)setPreview(rows);else setErr("タスクを抽出できませんでした");}catch(e2){setErr("JSONの解析に失敗しました");}}catch(e){setErr(e.message||"APIエラー");}
     setLoading(false);}
   function importPaste(){setErr("");try{const rows=normalize(parseJsonArray(pasteText));if(!rows.length){setErr("有効なタスクが見つかりませんでした");return;}setPreview(rows);setPasteMode(false);}catch(e){setErr("JSONの解析に失敗しました");}}
   const setRow=(k,key,v)=>setPreview(list=>list.map(r=>r._k===k?{...r,[key]:v,unmatched:key==="assigned_user_id"?false:r.unmatched}:r));
   const budgetSum=preview.reduce((a,r)=>a+r.budget,0);
   async function bulkCreate(){
-    const bad=preview.find(r=>!r.title.trim());if(bad){setErr("タスク名が空の行があります");return;}
+    const bad=preview.find(r=>!r.title.trim());if(bad){setErr("タスク名が空の行がありまぁE);return;}
     const created=preview.map(r=>({id:uid(),project_id:p.id,title:r.title.trim(),description:r.description,goal:r.goal,assigned_user_id:r.assigned_user_id||null,budget:r.budget,max_minutes:Math.round(r.max_hours*60),deadline:r.deadline||p.end_date||todayStr(),status:"todo",priority:r.priority,created_at:Date.now()}));
     for(const t of created) await insertRow("tasks",t);
     const byUser={};created.forEach(t=>{if(t.assigned_user_id)(byUser[t.assigned_user_id]=byUser[t.assigned_user_id]||[]).push(t.title);});
-    for(const[uidTo,titles]of Object.entries(byUser)) await notifyUsers([uidTo],"assign",`${titles.length}件のタスクが割り当てられました: ${titles.slice(0,2).join("、")}${titles.length>2?" ほか":""}`,{email:true});
-    toast(`${created.length}件のタスクを作成しました`); onClose();
+    for(const[uidTo,titles]of Object.entries(byUser)) await notifyUsers([uidTo],"assign",`${titles.length}件のタスクが割り当てられました: ${titles.slice(0,2).join("、E)}${titles.length>2?" ほぁE:""}`,{email:true});
+    toast(`${created.length}件のタスクを作�Eしました`); onClose();
   }
   return (
-    <Modal open onClose={onClose} title="LLMと相談して一括作成" wide>
+    <Modal open onClose={onClose} title="LLMと相諁E��て一括作�E" wide>
       <div className="flex gap-2 mb-3">
-        <button className={"chip"+(pasteMode?"":" on")} onClick={()=>setPasteMode(false)}><Sparkles size={13}/>チャット</button>
+        <button className={"chip"+(pasteMode?"":" on")} onClick={()=>setPasteMode(false)}><Sparkles size={13}/>チャチE��</button>
         <button className={"chip"+(pasteMode?" on":"")} onClick={()=>setPasteMode(true)}><Copy size={13}/>JSONを貼り付け</button>
       </div>
       {!pasteMode?(
         <div>
           <div className="panel p-3 mb-2" style={{height:200,overflowY:"auto",background:"var(--panel2)",border:"none"}}>
-            {chat.length===0&&<div className="text-sm" style={{color:"var(--muted)"}}>例: 「{p.name}のための開発タスクを5件作って」</div>}
+            {chat.length===0&&<div className="text-sm" style={{color:"var(--muted)"}}>侁E 「{p.name}のための開発タスクめE件作って、E/div>}
             {chat.map((m,i)=><div key={i} className={"flex mb-2 "+(m.role==="user"?"justify-end":"justify-start")}>
               <div className="px-3 py-2 rounded-xl text-sm" style={{maxWidth:"85%",whiteSpace:"pre-wrap",wordBreak:"break-word",background:m.role==="user"?"var(--ai)":"var(--panel)",color:m.role==="user"?"#fff":"var(--text)",fontFamily:m.role==="assistant"?"monospace":"inherit",fontSize:m.role==="assistant"?11:13}}>
                 {m.role==="assistant"&&m.content.length>400?m.content.slice(0,400)+" …(プレビューに反映済み)":m.content}</div></div>)}
-            {loading&&<div className="text-sm" style={{color:"var(--muted)"}}>Claudeが考えています…</div>}
+            {loading&&<div className="text-sm" style={{color:"var(--muted)"}}>Claudeが老E��てぁE��す…</div>}
             <div ref={chatEnd}/>
           </div>
-          <div className="flex gap-2"><input className="input" placeholder="どんなタスクを作りますか？" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} disabled={loading}/><button className="btn btn-p" onClick={send} disabled={loading}><Send size={14}/></button></div>
+          <div className="flex gap-2"><input className="input" placeholder="どんなタスクを作りますか�E�E value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} disabled={loading}/><button className="btn btn-p" onClick={send} disabled={loading}><Send size={14}/></button></div>
         </div>
       ):(
         <div>
@@ -1334,15 +1332,15 @@ function LLMModal({p, onClose}) {
       {err&&<div className="err mt-2">{err}</div>}
       {preview.length>0&&(
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-2"><div className="text-sm font-bold">プレビュー ({preview.length}件)</div><div className="text-xs mono" style={{color:budgetSum>st.remain?"var(--amber)":"var(--muted)"}}>予算合計 {fmtYen(budgetSum)} / 未配分 {fmtYen(st.remain)}</div></div>
+          <div className="flex items-center justify-between mb-2"><div className="text-sm font-bold">プレビュー ({preview.length}件)</div><div className="text-xs mono" style={{color:budgetSum>st.remain?"var(--amber)":"var(--muted)"}}>予算合訁E{fmtYen(budgetSum)} / 未配�E {fmtYen(st.remain)}</div></div>
           <div className="panel" style={{overflowX:"auto",maxHeight:280,overflowY:"auto"}}>
             <table className="tbl" style={{minWidth:700}}>
-              <thead><tr><th>タスク名</th><th>担当</th><th>優先度</th><th>予算</th><th>上限(h)</th><th>期日</th><th/></tr></thead>
+              <thead><tr><th>タスク吁E/th><th>拁E��E/th><th>優先度</th><th>予箁E/th><th>上限(h)</th><th>期日</th><th/></tr></thead>
               <tbody>{preview.map(r=>(
                 <tr key={r._k}>
-                  <td style={{minWidth:160}}><input className="input" style={{padding:"4px 8px",fontSize:12}} value={r.title} onChange={e=>setRow(r._k,"title",e.target.value)}/>{r.goal&&<div className="text-xs mt-1 truncate" style={{color:"var(--muted)",maxWidth:200}} title={r.goal}>目標: {r.goal}</div>}</td>
-                  <td><select className="select" style={{padding:"4px 8px",fontSize:12,borderColor:r.unmatched?"var(--amber)":undefined}} value={r.assigned_user_id} onChange={e=>setRow(r._k,"assigned_user_id",e.target.value)}><option value="">未割当</option>{candidates.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select>{r.unmatched&&<div className="text-xs" style={{color:"var(--amber)"}}>照合できず</div>}</td>
-                  <td><select className="select" style={{padding:"4px 8px",fontSize:12}} value={r.priority} onChange={e=>setRow(r._k,"priority",e.target.value)}><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></td>
+                  <td style={{minWidth:160}}><input className="input" style={{padding:"4px 8px",fontSize:12}} value={r.title} onChange={e=>setRow(r._k,"title",e.target.value)}/>{r.goal&&<div className="text-xs mt-1 truncate" style={{color:"var(--muted)",maxWidth:200}} title={r.goal}>目樁E {r.goal}</div>}</td>
+                  <td><select className="select" style={{padding:"4px 8px",fontSize:12,borderColor:r.unmatched?"var(--amber)":undefined}} value={r.assigned_user_id} onChange={e=>setRow(r._k,"assigned_user_id",e.target.value)}><option value="">未割彁E/option>{candidates.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select>{r.unmatched&&<div className="text-xs" style={{color:"var(--amber)"}}>照合できず</div>}</td>
+                  <td><select className="select" style={{padding:"4px 8px",fontSize:12}} value={r.priority} onChange={e=>setRow(r._k,"priority",e.target.value)}><option value="high">髁E/option><option value="medium">中</option><option value="low">佁E/option></select></td>
                   <td><input type="number" className="input num" style={{padding:"4px 8px",fontSize:12,width:90}} value={r.budget} onChange={e=>setRow(r._k,"budget",Number(e.target.value)||0)}/></td>
                   <td><input type="number" className="input num" style={{padding:"4px 8px",fontSize:12,width:64}} value={r.max_hours} onChange={e=>setRow(r._k,"max_hours",Number(e.target.value)||0)}/></td>
                   <td><input type="date" className="input" style={{padding:"4px 6px",fontSize:12}} value={r.deadline} onChange={e=>setRow(r._k,"deadline",e.target.value)}/></td>
@@ -1352,7 +1350,7 @@ function LLMModal({p, onClose}) {
           </div>
           <div className="flex justify-end gap-2 mt-3">
             <button className="btn" onClick={()=>setPreview([])}>クリア</button>
-            <button className="btn btn-p" onClick={bulkCreate}><Check size={14}/>一括作成 ({preview.length}件)</button>
+            <button className="btn btn-p" onClick={bulkCreate}><Check size={14}/>一括作�E ({preview.length}件)</button>
           </div>
         </div>
       )}
@@ -1361,8 +1359,7 @@ function LLMModal({p, onClose}) {
 }
 
 /* ============================================================
-   PM: 稼働・予算・設定タブ / 申請管理 / レポート
-   ============================================================ */
+   PM: 稼働�E予算�E設定タチE/ 申請管琁E/ レポ�EチE   ============================================================ */
 function MembersTab({p}) {
   const {db}=useApp();
   const [range,setRange]=useState("week");
@@ -1377,16 +1374,16 @@ function MembersTab({p}) {
     <div className="flex flex-col gap-4">
       <div className="panel p-4">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <SecTitle icon={Clock} title="メンバー稼働時間"/>
+          <SecTitle icon={Clock} title="メンバ�E稼働時閁E/>
           <Seg value={range} onChange={setRange} options={[{value:"week",label:"今週"},{value:"month",label:"今月"}]}/>
         </div>
-        {members.length===0?<Empty icon={Users} text="このプロジェクトにメンバーがいません"/>:(
+        {members.length===0?<Empty icon={Users} text="こ�Eプロジェクトにメンバ�Eがいません"/>:(
           <div style={{height:220}}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{top:4,right:8,left:-18,bottom:0}}>
                 <XAxis dataKey="name" tick={{fontSize:11,fill:"#8b8f98"}} axisLine={{stroke:"#8b8f9855"}} tickLine={false}/>
                 <YAxis tick={{fontSize:11,fill:"#8b8f98"}} axisLine={false} tickLine={false} unit="h"/>
-                <RTooltip cursor={{fill:"rgba(139,143,152,0.08)"}} formatter={v=>[v+" h","稼働"]} contentStyle={{background:"var(--panel)",border:"1px solid var(--border)",borderRadius:10,fontSize:12,color:"var(--text)"}}/>
+                <RTooltip cursor={{fill:"rgba(139,143,152,0.08)"}} formatter={v=>[v+" h","稼僁E]} contentStyle={{background:"var(--panel)",border:"1px solid var(--border)",borderRadius:10,fontSize:12,color:"var(--text)"}}/>
                 <Bar dataKey="hours" fill="var(--ai)" radius={[5,5,0,0]} maxBarSize={44}/>
               </BarChart>
             </ResponsiveContainer>
@@ -1395,19 +1392,19 @@ function MembersTab({p}) {
       </div>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:560}}>
-          <thead><tr><th>メンバー</th><th>担当タスク</th><th>完了</th><th>累計稼働</th><th>上限到達率</th></tr></thead>
+          <thead><tr><th>メンバ�E</th><th>拁E��タスク</th><th>完亁E/th><th>累計稼僁E/th><th>上限到達率</th></tr></thead>
           <tbody>{stats.map(s=>(
             <tr key={s.u.id}>
               <td><span className="flex items-center gap-2"><Avatar user={s.u} size={22}/>{s.u.name}</span></td>
               <td className="num">{s.count}</td><td className="num">{s.done}</td><td className="num">{fmtHM(s.worked)}</td>
               <td style={{minWidth:140}}><div className="flex items-center gap-2"><div className="flex-1"><Prog ratio={s.rate}/></div><span className="text-xs mono" style={{width:36}}>{Math.round(s.rate*100)}%</span></div></td>
             </tr>))}
-            {stats.length===0&&<tr><td colSpan={5}><Empty icon={Users} text="データがありません"/></td></tr>}
+            {stats.length===0&&<tr><td colSpan={5}><Empty icon={Users} text="チE�Eタがありません"/></td></tr>}
           </tbody>
         </table>
       </div>
-      {alerts.length>0&&<div className="panel p-4"><SecTitle icon={AlertTriangle} title="90%超過アラート" tone="var(--amber)"/>
-        <div className="flex flex-col gap-2">{alerts.map(t=>{const w=workedMin(db.worklogs,t.id);const u=db.users.find(x=>x.id===t.assigned_user_id);return <AlertRow key={t.id} tone={w>=t.max_minutes?"red":"amber"} text={`「${t.title}」 ${u?u.name:"未割当"} — ${fmtHM(w)} / ${fmtHM(t.max_minutes)}`}/>;})}</div>
+      {alerts.length>0&&<div className="panel p-4"><SecTitle icon={AlertTriangle} title="90%趁E��アラーチE tone="var(--amber)"/>
+        <div className="flex flex-col gap-2">{alerts.map(t=>{const w=workedMin(db.worklogs,t.id);const u=db.users.find(x=>x.id===t.assigned_user_id);return <AlertRow key={t.id} tone={w>=t.max_minutes?"red":"amber"} text={`、E{t.title}、E${u?u.name:"未割彁E}  E${fmtHM(w)} / ${fmtHM(t.max_minutes)}`}/>;})}</div>
       </div>}
     </div>
   );
@@ -1420,14 +1417,14 @@ function BudgetTab({p}) {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="総予算" value={fmtYen(p.budget)} unit="" mono/>
-        <StatCard label="配分済み" value={fmtYen(st.alloc)} unit="" mono warn={st.alloc>p.budget}/>
-        <StatCard label="消化額" value={fmtYen(st.consumed)} unit="" mono/>
-        <StatCard label="残額" value={fmtYen(p.budget-st.consumed)} unit="" mono/>
+        <StatCard label="総予箁E value={fmtYen(p.budget)} unit="" mono/>
+        <StatCard label="配�E済み" value={fmtYen(st.alloc)} unit="" mono warn={st.alloc>p.budget}/>
+        <StatCard label="消化顁E value={fmtYen(st.consumed)} unit="" mono/>
+        <StatCard label="残顁E value={fmtYen(p.budget-st.consumed)} unit="" mono/>
       </div>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:620}}>
-          <thead><tr><th>タスク</th><th>予算</th><th>消化</th><th style={{width:"30%"}}>消化状況</th><th>稼働</th></tr></thead>
+          <thead><tr><th>タスク</th><th>予箁E/th><th>消化</th><th style={{width:"30%"}}>消化状況E/th><th>稼僁E/th></tr></thead>
           <tbody>{rows.map(r=>(
             <tr key={r.t.id} className={r.risk?"warn90":""}>
               <td className="font-medium"><span className="flex items-center gap-2">{r.risk&&<AlertTriangle size={13} style={{color:"var(--amber)"}}/>}{r.t.title}</span></td>
@@ -1451,12 +1448,12 @@ function SettingsTab({p}) {
   const [fetched,setFetched]=useState(null);
   const [apply,setApply]=useState({name:false,description:true,status:false,budget:false});
   async function syncNotion(){
-    if(!p.notion_url){setNotionErr("先に「編集」からNotionページURLを設定してください");return;}
+    if(!p.notion_url){setNotionErr("先に「編雁E��からNotionペ�EジURLを設定してください");return;}
     setNotionBusy(true);setNotionErr("");setFetched(null);
     try{
-      const data=await callClaude([{role:"user",content:`Notionの以下のページを読み取り、プロジェクト情報を抽出してください。URL: ${p.notion_url}\n出力はJSONオブジェクト【のみ】:\n{"name":"プロジェクト名","description":"概要(200字以内)","status":"active|paused|completed","budget":数値またはnull}`}],{mcp_servers:[{type:"url",url:"https://mcp.notion.com/mcp",name:"notion"}],max_tokens:1000});
+      const data=await callClaude([{role:"user",content:`Notionの以下�Eペ�Eジを読み取り、�Eロジェクト情報を抽出してください。URL: ${p.notion_url}\n出力�EJSONオブジェクト【�Eみ、E\n{"name":"プロジェクト名","description":"概要E200字以冁E","status":"active|paused|completed","budget":数値また�Enull}`}],{mcp_servers:[{type:"url",url:"https://mcp.notion.com/mcp",name:"notion"}],max_tokens:1000});
       const obj=parseJsonObject(textOf(data));setFetched(obj);
-    }catch(e){setNotionErr("Notionからの取得に失敗しました。("+e.message+")");}
+    }catch(e){setNotionErr("Notionからの取得に失敗しました、E"+e.message+")");}
     setNotionBusy(false);
   }
   async function applyFetched(){
@@ -1466,37 +1463,37 @@ function SettingsTab({p}) {
     if(apply.status&&["active","paused","completed"].includes(fetched.status)) upd.status=fetched.status;
     if(apply.budget&&Number(fetched.budget)>0) upd.budget=Number(fetched.budget);
     await updateRow("projects",{id:p.id},{...upd,last_synced:Date.now()});
-    setFetched(null);toast("Notionの情報を取り込みました");
+    setFetched(null);toast("Notionの惁E��を取り込みました");
   }
   async function delProject(){
-    if(!(await ask(`プロジェクト「${p.name}」を削除しますか？`))) return;
+    if(!(await ask(`プロジェクト、E{p.name}」を削除しますか�E�`))) return;
     await deleteRow("projects",{id:p.id});
     toast("プロジェクトを削除しました");nav("projects");
   }
   return (
     <div className="flex flex-col gap-4" style={{maxWidth:640}}>
       <div className="panel p-4">
-        <SecTitle icon={Settings} title="基本情報"/>
-        <div className="text-sm mb-1"><span className="lbl">説明</span>{p.description||"—"}</div>
-        <button className="btn mt-2" onClick={()=>setEditOpen(true)}><Edit2 size={14}/>編集する</button>
+        <SecTitle icon={Settings} title="基本惁E��"/>
+        <div className="text-sm mb-1"><span className="lbl">説昁E/span>{p.description||" E}</div>
+        <button className="btn mt-2" onClick={()=>setEditOpen(true)}><Edit2 size={14}/>編雁E��めE/button>
       </div>
       <div className="panel p-4">
         <SecTitle icon={Link2} title="Notion連携"/>
-        {p.notion_url?<div className="text-sm mb-2 truncate"><a href={p.notion_url} target="_blank" rel="noreferrer">{p.notion_url}</a></div>:<div className="text-sm mb-2" style={{color:"var(--muted)"}}>NotionページURLが未設定です。</div>}
-        {p.last_synced&&<div className="text-xs mb-2" style={{color:"var(--muted)"}}>最終同期: {fmtDT(p.last_synced)}</div>}
+        {p.notion_url?<div className="text-sm mb-2 truncate"><a href={p.notion_url} target="_blank" rel="noreferrer">{p.notion_url}</a></div>:<div className="text-sm mb-2" style={{color:"var(--muted)"}}>Notionペ�EジURLが未設定です、E/div>}
+        {p.last_synced&&<div className="text-xs mb-2" style={{color:"var(--muted)"}}>最終同朁E {fmtDT(p.last_synced)}</div>}
         <button className="btn" disabled={notionBusy} onClick={syncNotion}><RefreshCw size={14}/>{notionBusy?"取得中…":"Notionと同期"}</button>
         {notionErr&&<div className="err mt-2">{notionErr}</div>}
         {fetched&&<div className="panel p-3 mt-3" style={{background:"var(--panel2)",border:"none"}}>
-          <div className="text-xs font-bold mb-2">取得結果 — 取り込む項目を選択</div>
-          {[["name","名前",fetched.name],["description","説明",fetched.description],["status","ステータス",fetched.status&&PJST[fetched.status]],["budget","予算",fetched.budget!=null?fmtYen(fetched.budget):null]].map(([k,l,v])=>(
+          <div className="text-xs font-bold mb-2">取得結果  E取り込む頁E��を選抁E/div>
+          {[["name","名前",fetched.name],["description","説昁E,fetched.description],["status","スチE�Eタス",fetched.status&&PJST[fetched.status]],["budget","予箁E,fetched.budget!=null?fmtYen(fetched.budget):null]].map(([k,l,v])=>(
             <label key={k} className="flex items-start gap-2 text-sm py-1 cursor-pointer" style={{opacity:v?1:0.4}}>
               <input type="checkbox" disabled={!v} checked={!!apply[k]&&!!v} onChange={e=>setApply(a=>({...a,[k]:e.target.checked}))} style={{marginTop:4}}/><span><b>{l}:</b> {v||"取得できず"}</span>
             </label>))}
-          <div className="flex justify-end gap-2 mt-2"><button className="btn btn-sm" onClick={()=>setFetched(null)}>破棄</button><button className="btn btn-p btn-sm" onClick={applyFetched}>取り込む</button></div>
+          <div className="flex justify-end gap-2 mt-2"><button className="btn btn-sm" onClick={()=>setFetched(null)}>破棁E/button><button className="btn btn-p btn-sm" onClick={applyFetched}>取り込む</button></div>
         </div>}
       </div>
       <div className="panel p-4" style={{borderColor:"var(--red)"}}>
-        <SecTitle icon={Trash2} title="危険な操作" tone="var(--red)"/>
+        <SecTitle icon={Trash2} title="危険な操佁E tone="var(--red)"/>
         <button className="btn btn-d" onClick={delProject}>プロジェクトを削除</button>
       </div>
       {editOpen&&<ProjectForm initial={p} onClose={()=>setEditOpen(false)}/>}
@@ -1511,17 +1508,17 @@ function CSVModal({p, onClose}) {
   const csv=useMemo(()=>{
     const tasks=db.tasks.filter(t=>t.project_id===p.id);
     const inMonth=ts=>{if(month==="all") return true;const d=new Date(ts);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`===month;};
-    const rows=[["タスク名","担当者","ステータス","優先度","期日","稼働時間(分)","稼働上限(分)","予算(円)","消化額(円)","完了日"]];
-    tasks.forEach(t=>{const u=db.users.find(x=>x.id===t.assigned_user_id);const w=db.worklogs.filter(l=>l.task_id===t.id&&inMonth(l.started_at)).reduce((a,l)=>a+l.duration_min,0);const allW=workedMin(db.worklogs,t.id);rows.push([t.title,u?u.name:"未割当",ST[t.status],PR[t.priority],t.deadline||"",Math.round(w),t.max_minutes||0,t.budget||0,Math.round((t.budget||0)*taskRatio(t,allW)),t.completed_at?new Date(t.completed_at).toISOString().slice(0,10):""]);});
+    const rows=[["タスク吁E,"拁E��老E,"スチE�Eタス","優先度","期日","稼働時閁E刁E","稼働上限(刁E","予箁E冁E","消化顁E冁E","完亁E��"]];
+    tasks.forEach(t=>{const u=db.users.find(x=>x.id===t.assigned_user_id);const w=db.worklogs.filter(l=>l.task_id===t.id&&inMonth(l.started_at)).reduce((a,l)=>a+l.duration_min,0);const allW=workedMin(db.worklogs,t.id);rows.push([t.title,u?u.name:"未割彁E,ST[t.status],PR[t.priority],t.deadline||"",Math.round(w),t.max_minutes||0,t.budget||0,Math.round((t.budget||0)*taskRatio(t,allW)),t.completed_at?new Date(t.completed_at).toISOString().slice(0,10):""]);});
     return toCSV(rows);
   },[db,p,month]);
-  function copy(){navigator.clipboard&&navigator.clipboard.writeText(csv).then(()=>toast("コピーしました")).catch(()=>toast("コピーに失敗しました"));}
-  function dl(){const ok=tryDownload(`report_${p.name}_${month}.csv`,csv);toast(ok?"ダウンロードを開始しました":"ダウンロード不可のためコピーをご利用ください");}
+  function copy(){navigator.clipboard&&navigator.clipboard.writeText(csv).then(()=>toast("コピ�Eしました")).catch(()=>toast("コピ�Eに失敗しました"));}
+  function dl(){const ok=tryDownload(`report_${p.name}_${month}.csv`,csv);toast(ok?"ダウンロードを開始しました":"ダウンロード不可のためコピ�Eをご利用ください");}
   return (
-    <Modal open onClose={onClose} title="稼働レポート出力 (CSV)">
+    <Modal open onClose={onClose} title="稼働レポ�Eト�E劁E(CSV)">
       <Field label="対象期間"><select className="select" value={month} onChange={e=>setMonth(e.target.value)}><option value="all">全期間</option>{months.map(m=><option key={m} value={m}>{m}</option>)}</select></Field>
       <textarea className="textarea mono" readOnly style={{minHeight:180,fontFamily:"monospace",fontSize:11}} value={csv}/>
-      <div className="flex justify-end gap-2 mt-3"><button className="btn" onClick={copy}><Copy size={14}/>コピー</button><button className="btn btn-p" onClick={dl}><Download size={14}/>ダウンロード</button></div>
+      <div className="flex justify-end gap-2 mt-3"><button className="btn" onClick={copy}><Copy size={14}/>コピ�E</button><button className="btn btn-p" onClick={dl}><Download size={14}/>ダウンローチE/button></div>
     </Modal>
   );
 }
@@ -1538,20 +1535,20 @@ function RequestsView() {
     if(r.type==="extend"){
       await updateRow("tasks",{id:t.id},{deadline:r.extend_to});
       await updateRow("requests",{id:r.id},{status:"approved"});
-      await notifyUsers([r.user_id],"approve",`「${t.title}」の期日延長が承認されました (新期日: ${r.extend_to})`,{email:true});
+      await notifyUsers([r.user_id],"approve",`、E{t.title}」�E期日延長が承認されました (新期日: ${r.extend_to})`,{email:true});
     } else {
       await updateRow("tasks",{id:t.id},{assigned_user_id:r.user_id});
       await updateRow("requests",{id:r.id},{status:"approved"});
       const others=db.requests.filter(x=>x.type!=="extend"&&x.task_id===t.id&&x.status==="pending"&&x.id!==r.id);
-      for(const o of others){await updateRow("requests",{id:o.id},{status:"rejected",reject_reason:"他のメンバーに割り当てられました"});await notifyUsers([o.user_id],"reject",`タスク「${t.title}」の申請は見送られました`);}
-      await notifyUsers([r.user_id],"approve",`タスク「${t.title}」の割当申請が承認されました`,{email:true});
+      for(const o of others){await updateRow("requests",{id:o.id},{status:"rejected",reject_reason:"他�Eメンバ�Eに割り当てられました"});await notifyUsers([o.user_id],"reject",`タスク、E{t.title}」�E申請�E見送られました`);}
+      await notifyUsers([r.user_id],"approve",`タスク、E{t.title}」�E割当申請が承認されました`,{email:true});
     }
     toast("承認しました");
   }
   async function reject(r){
     const t=taskOf(r);
     await updateRow("requests",{id:r.id},{status:"rejected",reject_reason:reason.trim()});
-    await notifyUsers([r.user_id],"reject",`${r.type==="extend"?"期日延長申請":"割当申請"}「${t?t.title:"?"}」が却下されました${reason.trim()?": "+reason.trim():""}`,{email:true});
+    await notifyUsers([r.user_id],"reject",`${r.type==="extend"?"期日延長申諁E:"割当申諁E}、E{t?t.title:"?"}」が却下されました${reason.trim()?": "+reason.trim():""}`,{email:true});
     setRejecting(null);setReason("");toast("却下しました");
   }
   const ReqCard=({r})=>{const t=taskOf(r);const u=userOf(r);return(
@@ -1560,35 +1557,35 @@ function RequestsView() {
         <Avatar user={u} size={30}/>
         <div className="flex-1" style={{minWidth:200}}>
           <div className="text-sm font-bold">{t?t.title:"(削除済みタスク)"}</div>
-          <div className="text-xs mt-1" style={{color:"var(--muted)"}}>{u?u.name:"?"} · {fmtDT(r.requested_at)}{r.type==="extend"&&t&&<> · 期日 {t.deadline} → <b style={{color:"var(--ai)"}}>{r.extend_to}</b></>}</div>
-          {r.reason&&<div className="text-sm mt-1">理由: {r.reason}</div>}
+          <div className="text-xs mt-1" style={{color:"var(--muted)"}}>{u?u.name:"?"} · {fmtDT(r.requested_at)}{r.type==="extend"&&t&&<> · 期日 {t.deadline} ↁE<b style={{color:"var(--ai)"}}>{r.extend_to}</b></>}</div>
+          {r.reason&&<div className="text-sm mt-1">琁E��: {r.reason}</div>}
         </div>
-        <Badge cls={r.type==="extend"?"b-amber":"b-blue"}>{r.type==="extend"?"期日延長":"割当申請"}</Badge>
+        <Badge cls={r.type==="extend"?"b-amber":"b-blue"}>{r.type==="extend"?"期日延長":"割当申諁E}</Badge>
       </div>
       {rejecting===r.id?(
         <div className="flex gap-2 mt-3">
-          <input className="input" placeholder="却下理由 (任意)" value={reason} onChange={e=>setReason(e.target.value)}/>
-          <button className="btn btn-d" onClick={()=>reject(r)}>却下する</button>
-          <button className="btn" onClick={()=>{setRejecting(null);setReason("");}}>戻る</button>
+          <input className="input" placeholder="却下理由 (任愁E" value={reason} onChange={e=>setReason(e.target.value)}/>
+          <button className="btn btn-d" onClick={()=>reject(r)}>却下すめE/button>
+          <button className="btn" onClick={()=>{setRejecting(null);setReason("");}}>戻めE/button>
         </div>
       ):(
         <div className="flex justify-end gap-2 mt-3">
-          <button className="btn" onClick={()=>{setRejecting(r.id);setReason("");}}><X size={14}/>却下</button>
-          <button className="btn btn-p" onClick={()=>approve(r)}><Check size={14}/>承認</button>
+          <button className="btn" onClick={()=>{setRejecting(r.id);setReason("");}}><X size={14}/>却丁E/button>
+          <button className="btn btn-p" onClick={()=>approve(r)}><Check size={14}/>承誁E/button>
         </div>
       )}
     </div>);};
   return (
     <div>
-      <PageTitle title="申請管理" sub={`未処理 ${pend.length} 件`}/>
-      {pend.length===0?<div className="panel"><Empty icon={Inbox} text="未処理の申請はありません"/></div>:(
+      <PageTitle title="申請管琁E sub={`未処琁E${pend.length} 件`}/>
+      {pend.length===0?<div className="panel"><Empty icon={Inbox} text="未処琁E�E申請�Eありません"/></div>:(
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{pend.map(r=><ReqCard key={r.id} r={r}/>)}</div>
       )}
-      {hist.length>0&&<div className="mt-6"><h2 className="text-sm font-bold mb-2">最近の処理履歴</h2>
+      {hist.length>0&&<div className="mt-6"><h2 className="text-sm font-bold mb-2">最近�E処琁E��歴</h2>
         <div className="panel">{hist.map(r=>{const t=taskOf(r);const u=userOf(r);return(
           <div key={r.id} className="flex items-center gap-2 px-4 py-2 text-sm" style={{borderBottom:"1px solid var(--border)"}}>
-            <Badge cls={r.status==="approved"?"b-green":"b-red"}>{r.status==="approved"?"承認":"却下"}</Badge>
-            <span className="flex-1 truncate">{t?t.title:"(削除済み)"} — {u?u.name:"?"}{r.type==="extend"?"(期日延長)":""}</span>
+            <Badge cls={r.status==="approved"?"b-green":"b-red"}>{r.status==="approved"?"承誁E:"却丁E}</Badge>
+            <span className="flex-1 truncate">{t?t.title:"(削除済み)"}  E{u?u.name:"?"}{r.type==="extend"?"(期日延長)":""}</span>
             <span className="text-xs" style={{color:"var(--muted)"}}>{fmtDT(r.requested_at)}</span>
           </div>);})}</div>
       </div>}
@@ -1597,7 +1594,7 @@ function RequestsView() {
 }
 
 /* ============================================================
-   Member: ダッシュボード・タスク・タイマー・履歴
+   Member: ダチE��ュボ�Eド�Eタスク・タイマ�E・履歴
    ============================================================ */
 function UnassignedBanner() {
   const {db,user,nav}=useApp();
@@ -1607,7 +1604,7 @@ function UnassignedBanner() {
   if(myActive.length>1||unassigned.length===0) return null;
   return <div className="panel p-4 mb-4 flex items-center gap-3 flex-wrap" style={{borderColor:"var(--ai)",background:"var(--ai-soft)"}}>
     <Sparkles size={18} style={{color:"var(--ai)"}}/>
-    <div className="flex-1 text-sm" style={{minWidth:180}}><b>手が空きそうですか？</b> 割当可能なタスクが {unassigned.length} 件あります。</div>
+    <div className="flex-1 text-sm" style={{minWidth:180}}><b>手が空きそぁE��すか�E�E/b> 割当可能なタスクぁE{unassigned.length} 件あります、E/div>
     <button className="btn btn-p btn-sm" onClick={()=>nav("unassigned")}>利用可能なタスクを見る</button>
   </div>;
 }
@@ -1625,21 +1622,21 @@ function MemberDashboard() {
   const TaskRow=({t,tone})=><div className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm" style={{background:"var(--panel2)"}} onClick={()=>setOpenTaskId(t.id)}><Badge cls={PR_BADGE[t.priority]}>{PR[t.priority]}</Badge><span className="flex-1 truncate font-medium">{t.title}</span><span className="text-xs mono" style={{color:tone||"var(--muted)"}}>{t.deadline}</span></div>;
   return (
     <div>
-      <PageTitle title={`こんにちは、${user.name.split(/\s+/)[0]} さん`} sub="今日の稼働をはじめましょう"/>
+      <PageTitle title={`こんにちは、E{user.name.split(/\s+/)[0]} さん`} sub="今日の稼働をはじめましょぁE/>
       <UnassignedBanner/>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
         <div className="panel p-4 md:col-span-1">
-          <div className="text-xs mb-1" style={{color:"var(--muted)"}}>今週の稼働時間</div>
+          <div className="text-xs mb-1" style={{color:"var(--muted)"}}>今週の稼働時閁E/div>
           <div className="bignum" style={{color:"var(--ai)"}}>{fmtHM(weekMin)}</div>
-          <div className="text-xs mt-1" style={{color:"var(--muted)"}}>{timer?"計測中の時間を含む":"月曜はじまり"}</div>
+          <div className="text-xs mt-1" style={{color:"var(--muted)"}}>{timer?"計測中の時間を含む":"月曜はじまめE}</div>
         </div>
         <div className="panel p-4 md:col-span-2">
-          <SecTitle icon={Calendar} title="締め切りが近いタスク"/>
+          <SecTitle icon={Calendar} title="締め�Eりが近いタスク"/>
           <div className="flex flex-col gap-2">
             {overdue.map(t=><TaskRow key={t.id} t={t} tone="var(--red)"/>)}
             {dueToday.map(t=><TaskRow key={t.id} t={t} tone="var(--amber)"/>)}
             {dueWeek.slice(0,4).map(t=><TaskRow key={t.id} t={t}/>)}
-            {overdue.length+dueToday.length+dueWeek.length===0&&<div className="text-sm py-3" style={{color:"var(--muted)"}}>今週締め切りのタスクはありません 🎉</div>}
+            {overdue.length+dueToday.length+dueWeek.length===0&&<div className="text-sm py-3" style={{color:"var(--muted)"}}>今週締め�Eり�Eタスクはありません 🎉</div>}
           </div>
         </div>
       </div>
@@ -1674,7 +1671,7 @@ function MemberTaskCard({t}) {
       <Badge cls={PR_BADGE[t.priority]}>{PR[t.priority]}</Badge>
     </div>
     <div className="flex items-center justify-between text-xs mb-1" style={{color:"var(--muted)"}}>
-      <span className="flex items-center gap-1"><Calendar size={11}/>{t.deadline||"期日なし"}</span>
+      <span className="flex items-center gap-1"><Calendar size={11}/>{t.deadline||"期日なぁE}</span>
       <span className="mono">{fmtHM(w)} / {fmtHM(t.max_minutes)}</span>
     </div>
     <Prog ratio={r}/>
@@ -1693,7 +1690,7 @@ function MemberTasks() {
     <div>
       <PageTitle title="マイタスク" sub={`全 ${mine.length} 件`}/>
       <UnassignedBanner/>
-      <div className="mb-4"><Seg value={stF} onChange={setStF} options={[{value:"all",label:"すべて"},{value:"todo",label:"未着手"},{value:"in_progress",label:"進行中"},{value:"done",label:"完了"}]}/></div>
+      <div className="mb-4"><Seg value={stF} onChange={setStF} options={[{value:"all",label:"すべて"},{value:"todo",label:"未着扁E},{value:"in_progress",label:"進行中"},{value:"done",label:"完亁E}]}/></div>
       {projects.length===0&&<div className="panel"><Empty icon={ClipboardList} text="割り当てられたタスクはまだありません"/></div>}
       {projects.map(p=>{
         const ts=mine.filter(t=>t.project_id===p.id&&(stF==="all"||t.status===stF));
@@ -1703,7 +1700,7 @@ function MemberTasks() {
           <div className="flex items-center gap-2 mb-2"><h2 className="text-sm font-bold m-0">{p.name}</h2><Badge cls={PJ_BADGE[p.status]}>{PJST[p.status]}</Badge></div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{(stF==="done"?done:act).map(t=><MemberTaskCard key={t.id} t={t}/>)}</div>
           {stF==="all"&&done.length>0&&<div className="mt-2">
-            <button className="btn btn-sm" onClick={()=>setOpenDone(o=>({...o,[p.id]:!o[p.id]}))}>{openDone[p.id]?<ChevronDown size={13}/>:<ChevronRight size={13}/>}完了 {done.length} 件</button>
+            <button className="btn btn-sm" onClick={()=>setOpenDone(o=>({...o,[p.id]:!o[p.id]}))}>{openDone[p.id]?<ChevronDown size={13}/>:<ChevronRight size={13}/>}完亁E{done.length} 件</button>
             {openDone[p.id]&&<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-2" style={{opacity:0.75}}>{done.map(t=><MemberTaskCard key={t.id} t={t}/>)}</div>}
           </div>}
         </section>;})}
@@ -1718,12 +1715,12 @@ function UnassignedView() {
   const myPending=t=>db.requests.find(r=>r.type!=="extend"&&r.task_id===t.id&&r.user_id===user.id&&r.status==="pending");
   async function request(t){
     await insertRow("requests",{id:uid(),type:"assign",task_id:t.id,user_id:user.id,status:"pending",requested_at:Date.now()});
-    await notifyUsers(pmIds(),"request",`${user.name} が未割当タスク「${t.title}」への割当を申請しました`,{email:true});
+    await notifyUsers(pmIds(),"request",`${user.name} が未割当タスク、E{t.title}」への割当を申請しました`,{email:true});
     toast("申請を送信しました");
   }
   return (
     <div>
-      <PageTitle title="利用可能なタスク" sub="未割当のタスクに割当を申請できます" back={()=>nav("mytasks")}/>
+      <PageTitle title="利用可能なタスク" sub="未割当�Eタスクに割当を申請できまぁE back={()=>nav("mytasks")}/>
       {list.length===0?<div className="panel"><Empty icon={Inbox} text="現在、割当可能なタスクはありません"/></div>:(
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{list.map(t=>{
           const p=db.projects.find(x=>x.id===t.project_id); const pending=myPending(t);
@@ -1732,11 +1729,11 @@ function UnassignedView() {
             <div className="text-xs mb-2" style={{color:"var(--muted)"}}>{p?p.name:""}</div>
             {t.description&&<div className="text-sm mb-2" style={{color:"var(--muted)"}}>{t.description.slice(0,80)}{t.description.length>80?"…":""}</div>}
             <div className="flex gap-4 text-xs mb-3 flex-wrap" style={{color:"var(--muted)"}}>
-              <span className="flex items-center gap-1"><Calendar size={11}/>{t.deadline||"—"}</span>
-              <span className="mono">予算 {fmtYen(t.budget)}</span>
+              <span className="flex items-center gap-1"><Calendar size={11}/>{t.deadline||" E}</span>
+              <span className="mono">予箁E{fmtYen(t.budget)}</span>
               <span className="mono flex items-center gap-1"><Clock size={11}/>上限 {fmtHM(t.max_minutes)}</span>
             </div>
-            {pending?<button className="btn w-full justify-center" disabled>申請済み (承認待ち)</button>:<button className="btn btn-p w-full justify-center" onClick={()=>request(t)}>割当を申請する</button>}
+            {pending?<button className="btn w-full justify-center" disabled>申請済み (承認征E��)</button>:<button className="btn btn-p w-full justify-center" onClick={()=>request(t)}>割当を申請すめE/button>}
           </div>;})}
         </div>
       )}
@@ -1766,13 +1763,13 @@ function MemberTaskModal({taskId, onClose}) {
     if(comment.trim().length<50) return;
     await updateRow("tasks",{id:t.id},{status:"done",completed_at:Date.now(),completion_comment:comment.trim()});
     if(running) await stopTimer();
-    await notifyUsers(pmIds(),"done",`${user.name} が「${t.title}」を完了報告しました`,{email:true});
-    toast("完了を報告しました"); setCompleting(false); onClose();
+    await notifyUsers(pmIds(),"done",`${user.name} が、E{t.title}」を完亁E��告しました`,{email:true});
+    toast("完亁E��報告しました"); setCompleting(false); onClose();
   }
   async function requestExtend(){
-    if(!extDate||(t.deadline&&extDate<=t.deadline)){toast("現在の期日より後の日付を選んでください");return;}
+    if(!extDate||(t.deadline&&extDate<=t.deadline)){toast("現在の期日より後�E日付を選んでください");return;}
     await insertRow("requests",{id:uid(),type:"extend",task_id:t.id,user_id:user.id,status:"pending",requested_at:Date.now(),extend_to:extDate,reason:extReason.trim()});
-    await notifyUsers(pmIds(),"extend",`${user.name} が「${t.title}」の期日延長を申請しました (${t.deadline} → ${extDate})`,{email:true});
+    await notifyUsers(pmIds(),"extend",`${user.name} が、E{t.title}」�E期日延長を申請しました (${t.deadline} ↁE${extDate})`,{email:true});
     setExtending(false);setExtDate("");setExtReason("");toast("延長申請を送信しました");
   }
   return (
@@ -1781,12 +1778,12 @@ function MemberTaskModal({taskId, onClose}) {
         <div><div className="text-lg font-bold">{t.title}</div><div className="text-xs" style={{color:"var(--muted)"}}>{p?p.name:""}</div></div>
         <div className="flex flex-col items-end gap-1"><Badge cls={ST_BADGE[t.status]} dot>{ST[t.status]}</Badge><Badge cls={PR_BADGE[t.priority]}>優先度 {PR[t.priority]}</Badge></div>
       </div>
-      {over&&t.status!=="done"&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm my-3" style={{background:"var(--red-bg)",color:"var(--red)"}}><AlertTriangle size={15}/>稼働時間が上限を超過しました。PMに連絡してください。</div>}
-      <div className="p-3 rounded-lg my-3" style={{background:"var(--ai-soft)"}}><div className="lbl" style={{color:"var(--ai)"}}>目標・ノルマ</div><div className="text-sm font-medium" style={{whiteSpace:"pre-wrap"}}>{t.goal||"—"}</div></div>
+      {over&&t.status!=="done"&&<div className="flex items-center gap-2 p-3 rounded-lg text-sm my-3" style={{background:"var(--red-bg)",color:"var(--red)"}}><AlertTriangle size={15}/>稼働時間が上限を趁E��しました。PMに連絡してください、E/div>}
+      <div className="p-3 rounded-lg my-3" style={{background:"var(--ai-soft)"}}><div className="lbl" style={{color:"var(--ai)"}}>目標�EノルチE/div><div className="text-sm font-medium" style={{whiteSpace:"pre-wrap"}}>{t.goal||" E}</div></div>
       {t.description&&<div className="text-sm mb-3" style={{whiteSpace:"pre-wrap",color:"var(--muted)"}}>{t.description}</div>}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <MiniStat label="期日" value={t.deadline||"—"}/>
-        <MiniStat label="累計 / 上限" value={`${fmtHM(worked)} / ${fmtHM(t.max_minutes)}`} mono warn={t.max_minutes>0&&worked>=t.max_minutes*0.9}/>
+        <MiniStat label="期日" value={t.deadline||" E}/>
+        <MiniStat label="累訁E/ 上限" value={`${fmtHM(worked)} / ${fmtHM(t.max_minutes)}`} mono warn={t.max_minutes>0&&worked>=t.max_minutes*0.9}/>
         <MiniStat label="残り時間" value={remain>=0?fmtHM(remain):"-"+fmtHM(-remain)} mono warn={remain<0}/>
       </div>
       <Prog ratio={t.max_minutes>0?worked/t.max_minutes:0}/>
@@ -1800,11 +1797,11 @@ function MemberTaskModal({taskId, onClose}) {
             </div>
           ):(
             <button className="btn btn-p w-full justify-center py-3" style={{fontSize:15}} onClick={()=>startTimer(t)} disabled={!!timer} onTouchEnd={e=>{if(!timer){e.preventDefault();startTimer(t);}}}>
-              <Play size={17}/>{timer?"他のタスクを計測中":"稼働開始"}
+              <Play size={17}/>{timer?"他�Eタスクを計測中":"稼働開姁E}
             </button>
           )}
         </div>
-      ):(t.completion_comment&&<div className="p-3 rounded-lg my-3" style={{background:"var(--green-bg)"}}><div className="lbl" style={{color:"var(--green)"}}>完了コメント</div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.completion_comment}</div></div>)}
+      ):(t.completion_comment&&<div className="p-3 rounded-lg my-3" style={{background:"var(--green-bg)"}}><div className="lbl" style={{color:"var(--green)"}}>完亁E��メンチE/div><div className="text-sm" style={{whiteSpace:"pre-wrap"}}>{t.completion_comment}</div></div>)}
       <div className="mb-3"><div className="lbl">過去の稼働ログ ({logs.length}件)</div>
         {logs.length===0?<div className="text-sm" style={{color:"var(--muted)"}}>まだ記録がありません</div>:(
           <div className="panel" style={{maxHeight:150,overflowY:"auto"}}>
@@ -1820,27 +1817,27 @@ function MemberTaskModal({taskId, onClose}) {
       {t.status!=="done"&&<div className="mt-5 flex flex-col gap-3">
         {completing?(
           <div className="panel p-3" style={{background:"var(--panel2)",border:"none"}}>
-            <div className="lbl">完了コメント (50文字以上・必須)</div>
-            <textarea className="textarea" value={comment} onChange={e=>setComment(e.target.value)} placeholder="達成内容・成果物の場所・引き継ぎ事項などを記入"/>
-            <div className="text-xs mt-1 text-right" style={{color:comment.trim().length>=50?"var(--green)":"var(--muted)"}}>{comment.trim().length} / 50文字</div>
+            <div className="lbl">完亁E��メンチE(50斁E��以上�E忁E��E</div>
+            <textarea className="textarea" value={comment} onChange={e=>setComment(e.target.value)} placeholder="達�E冁E��・成果物の場所・引き継ぎ事頁E��どを記�E"/>
+            <div className="text-xs mt-1 text-right" style={{color:comment.trim().length>=50?"var(--green)":"var(--muted)"}}>{comment.trim().length} / 50斁E��E/div>
             <div className="flex justify-end gap-2 mt-2">
-              <button className="btn btn-sm" onClick={()=>setCompleting(false)}>戻る</button>
-              <button className="btn btn-p btn-sm" disabled={comment.trim().length<50} onClick={complete}><Check size={13}/>完了報告を送信</button>
+              <button className="btn btn-sm" onClick={()=>setCompleting(false)}>戻めE/button>
+              <button className="btn btn-p btn-sm" disabled={comment.trim().length<50} onClick={complete}><Check size={13}/>完亁E��告を送信</button>
             </div>
           </div>
         ):extending?(
           <div className="panel p-3" style={{background:"var(--panel2)",border:"none"}}>
-            <div className="lbl">期日延長申請 (現在: {t.deadline||"—"})</div>
+            <div className="lbl">期日延長申諁E(現在: {t.deadline||" E})</div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <input type="date" className="input" value={extDate} onChange={e=>setExtDate(e.target.value)}/>
-              <input className="input" placeholder="理由" value={extReason} onChange={e=>setExtReason(e.target.value)}/>
+              <input className="input" placeholder="琁E��" value={extReason} onChange={e=>setExtReason(e.target.value)}/>
             </div>
-            <div className="flex justify-end gap-2"><button className="btn btn-sm" onClick={()=>setExtending(false)}>戻る</button><button className="btn btn-p btn-sm" onClick={requestExtend}>申請する</button></div>
+            <div className="flex justify-end gap-2"><button className="btn btn-sm" onClick={()=>setExtending(false)}>戻めE/button><button className="btn btn-p btn-sm" onClick={requestExtend}>申請すめE/button></div>
           </div>
         ):(
           <div className="flex gap-2 flex-wrap">
-            <button className="btn flex-1 justify-center" onClick={()=>setCompleting(true)}><CheckCircle2 size={15}/>完了にする</button>
-            {extPending?<button className="btn flex-1 justify-center" disabled>延長申請中</button>:<button className="btn flex-1 justify-center" onClick={()=>{setExtending(true);setExtDate("");}}><Calendar size={15}/>期日延長を申請</button>}
+            <button className="btn flex-1 justify-center" onClick={()=>setCompleting(true)}><CheckCircle2 size={15}/>完亁E��する</button>
+            {extPending?<button className="btn flex-1 justify-center" disabled>延長申請中</button>:<button className="btn flex-1 justify-center" onClick={()=>{setExtending(true);setExtDate("");}}><Calendar size={15}/>期日延長を申諁E/button>}
           </div>
         )}
       </div>}
@@ -1860,26 +1857,26 @@ function TimerConfirmModal({data, onClose}) {
   function reset(){setH(preH);setM(preM);setEdited(false);setErr("");}
   async function submit(){
     if(edited&&editedMin>measuredMin){setErr("計測時間より長くすることはできません");return;}
-    if(edited&&editedMin<=0){setErr("1分以上を入力してください");return;}
-    if(!task){toast("対象タスクが削除されていたため記録を破棄しました");onClose();return;}
+    if(edited&&editedMin<=0){setErr("1刁E��上を入力してください");return;}
+    if(!task){toast("対象タスクが削除されてぁE��ため記録を破棁E��ました");onClose();return;}
     await commitWorkLog(task,startedAt,seconds,edited?editedMin:measuredMin,note);
   }
-  async function discard(){if(await ask("この計測記録を破棄しますか？")) onClose();}
+  async function discard(){if(await ask("こ�E計測記録を破棁E��ますか�E�E)) onClose();}
   return (
-    <Modal open onClose={discard} title="稼働の記録・報告" noClose>
+    <Modal open onClose={discard} title="稼働�E記録・報呁E noClose>
       <div className="text-sm mb-1" style={{color:"var(--muted)"}}>{task?task.title:"(削除されたタスク)"}</div>
       <div className="text-center my-4"><div className="text-xs mb-1" style={{color:"var(--muted)"}}>計測時間</div><div className="mono font-bold" style={{fontSize:40}}>{fmtHMS(seconds)}</div></div>
       <Field label="記録する時間 (短縮のみ可能)" error={err}>
         <div className="flex items-center gap-2">
           <input type="number" min="0" className="input num" style={{width:84}} value={h} onChange={onEdit(setH)}/><span className="text-sm">時間</span>
-          <input type="number" min="0" max="59" className="input num" style={{width:74}} value={m} onChange={onEdit(setM)}/><span className="text-sm">分</span>
-          <button className="btn btn-sm" onClick={reset}><RefreshCw size={12}/>リセット</button>
+          <input type="number" min="0" max="59" className="input num" style={{width:74}} value={m} onChange={onEdit(setM)}/><span className="text-sm">刁E/span>
+          <button className="btn btn-sm" onClick={reset}><RefreshCw size={12}/>リセチE��</button>
         </div>
       </Field>
-      <Field label={`メモ (任意・${note.length}/100文字)`}><input className="input" maxLength={100} value={note} onChange={e=>setNote(e.target.value)} placeholder="作業内容のメモ"/></Field>
+      <Field label={`メモ (任意�E${note.length}/100斁E��E`}><input className="input" maxLength={100} value={note} onChange={e=>setNote(e.target.value)} placeholder="作業冁E��のメモ"/></Field>
       <div className="flex justify-between gap-2 mt-4">
-        <button className="btn btn-d" onClick={discard}>破棄</button>
-        <button className="btn btn-p" onClick={submit}><Check size={15}/>確定・報告</button>
+        <button className="btn btn-d" onClick={discard}>破棁E/button>
+        <button className="btn btn-p" onClick={submit}><Check size={15}/>確定�E報呁E/button>
       </div>
     </Modal>
   );
@@ -1894,15 +1891,15 @@ function HistoryView() {
   const total=list.reduce((a,l)=>a+l.duration_min,0);
   return (
     <div>
-      <PageTitle title="稼働履歴" sub={`${month==="all"?"全期間":month} 合計 ${fmtHM(total)}`} right={<select className="select" style={{width:"auto"}} value={month} onChange={e=>setMonth(e.target.value)}><option value="all">全期間</option>{months.map(mo=><option key={mo} value={mo}>{mo}</option>)}</select>}/>
+      <PageTitle title="稼働履歴" sub={`${month==="all"?"全期間":month} 合訁E${fmtHM(total)}`} right={<select className="select" style={{width:"auto"}} value={month} onChange={e=>setMonth(e.target.value)}><option value="all">全期間</option>{months.map(mo=><option key={mo} value={mo}>{mo}</option>)}</select>}/>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:560}}>
-          <thead><tr><th>日時</th><th>タスク</th><th>プロジェクト</th><th>時間</th><th>メモ</th></tr></thead>
+          <thead><tr><th>日晁E/th><th>タスク</th><th>プロジェクチE/th><th>時間</th><th>メモ</th></tr></thead>
           <tbody>{list.map(l=>{const t=db.tasks.find(x=>x.id===l.task_id);const p=t&&db.projects.find(x=>x.id===t.project_id);return(
             <tr key={l.id}>
               <td className="num text-xs" style={{color:"var(--muted)"}}>{fmtDT(l.started_at)}</td>
               <td className="font-medium">{t?t.title:"(削除済み)"}</td>
-              <td className="text-xs" style={{color:"var(--muted)"}}>{p?p.name:"—"}</td>
+              <td className="text-xs" style={{color:"var(--muted)"}}>{p?p.name:" E}</td>
               <td className="num">{fmtHM(l.duration_min)}</td>
               <td className="text-xs" style={{color:"var(--muted)"}}>{l.note}</td>
             </tr>);})}
@@ -1922,7 +1919,7 @@ function ProfileView() {
   async function saveName(){if(!name.trim()) return;await updateRow("users",{id:user.id},{name:name.trim()});toast("名前を更新しました");}
   async function savePw(){
     setErr("");
-    if(pw.length<6){setErr("新しいパスワードは6文字以上にしてください");return;}
+    if(pw.length<6){setErr("新しいパスワード�E6斁E��以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
     // 現在のパスワードで再認証
     const {error:signInErr}=await supabase.auth.signInWithPassword({email:user.email,password:cur});
@@ -1933,17 +1930,17 @@ function ProfileView() {
   }
   return (
     <div style={{maxWidth:480}}>
-      <PageTitle title="プロフィール設定"/>
+      <PageTitle title="プロフィール設宁E/>
       <div className="panel p-4 mb-4">
         <div className="flex items-center gap-3 mb-4"><Avatar user={user} size={44}/><div><div className="font-bold">{user.name}</div><div className="text-xs" style={{color:"var(--muted)"}}>{user.email} · {user.role}</div></div></div>
-        <Field label="表示名"><input className="input" value={name} onChange={e=>setName(e.target.value)}/></Field>
-        <button className="btn btn-p" onClick={saveName}>名前を保存</button>
+        <Field label="表示吁E><input className="input" value={name} onChange={e=>setName(e.target.value)}/></Field>
+        <button className="btn btn-p" onClick={saveName}>名前を保孁E/button>
       </div>
       <div className="panel p-4">
         <SecTitle icon={Shield} title="パスワード変更"/>
-        <Field label="現在のパスワード"><input type="password" className="input" value={cur} onChange={e=>setCur(e.target.value)}/></Field>
-        <Field label="新しいパスワード (6文字以上)"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)}/></Field>
-        <Field label="新しいパスワード (確認)"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)}/></Field>
+        <Field label="現在のパスワーチE><input type="password" className="input" value={cur} onChange={e=>setCur(e.target.value)}/></Field>
+        <Field label="新しいパスワーチE(6斁E��以丁E"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)}/></Field>
+        <Field label="新しいパスワーチE(確誁E"><input type="password" className="input" value={pw2} onChange={e=>setPw2(e.target.value)}/></Field>
         {err&&<div className="err mb-2">{err}</div>}
         <button className="btn btn-p" onClick={savePw}>パスワードを変更</button>
       </div>
@@ -1957,61 +1954,60 @@ function UsersView() {
   const [name,setName]=useState(""); const [email,setEmail]=useState(""); const [role,setRole]=useState("Member");
   const [issued,setIssued]=useState(null);
   async function doInvite(){
-    if(!name.trim()||!email.includes("@")){toast("名前とメールアドレスを入力してください");return;}
+    if(!name.trim()||!email.includes("@")){toast("名前とメールアドレスを�E力してください");return;}
     const em=email.trim().toLowerCase();
-    if(db.users.some(u=>u.email===em)){toast("そのメールアドレスは登録済みです");return;}
+    if(db.users.some(u=>u.email===em)){toast("そ�Eメールアドレスは登録済みでぁE);return;}
     const pw=genPw(); const salt=uid();
     const nu={id:uid(),name:name.trim(),email:em,role,avatar_color:AV_COLORS[db.users.length%AV_COLORS.length],salt,pass_hash:await sha(pw,salt),pending:false,must_change:true,created_at:Date.now()};
     await insertRow("users",nu);
     setIssued({name:nu.name,email:em,pw}); setInvite(false); setName(""); setEmail(""); setRole("Member");
   }
   async function resetPw(u){
-    if(!(await ask(`${u.name} の仮パスワードを再発行しますか？`))) return;
+    if(!(await ask(`${u.name} の仮パスワードを再発行しますか�E�`))) return;
     const pw=genPw();
-    // Supabase Auth側のパスワードをサービスロールで更新（anon keyでは不可のためユーザー自身に変更させる）
-    await updateRow("users",{id:u.id},{must_change:true});
-    setIssued({name:u.name,email:u.email,pw,note:"※ パスワードリセットはSupabaseダッシュボードのAuthentication→Usersから行ってください"});
+    // Supabase Auth側のパスワードをサービスロールで更新�E�Enon keyでは不可のためユーザー自身に変更させる！E    await updateRow("users",{id:u.id},{must_change:true});
+    setIssued({name:u.name,email:u.email,pw,note:"※ パスワードリセチE��はSupabaseダチE��ュボ�Eド�EAuthentication→Usersから行ってください"});
   }
   async function changeRole(u,r){
-    if(u.role==="PM"&&r==="Member"&&db.users.filter(x=>x.role==="PM"&&!x.pending).length<=1){toast("最後のPMは変更できません");return;}
+    if(u.role==="PM"&&r==="Member"&&db.users.filter(x=>x.role==="PM"&&!x.pending).length<=1){toast("最後�EPMは変更できません");return;}
     await updateRow("users",{id:u.id},{role:r}); toast("ロールを変更しました");
   }
   async function del(u){
-    if(!(await ask(`${u.name} を削除しますか？`))) return;
+    if(!(await ask(`${u.name} を削除しますか�E�`))) return;
     await deleteRow("users",{id:u.id}); toast("削除しました");
   }
   return (
     <div>
-      <PageTitle title="ユーザー管理" sub={`${db.users.length} 名`} right={<button className="btn btn-p" onClick={()=>setInvite(true)}><Plus size={15}/>メンバーを招待</button>}/>
+      <PageTitle title="ユーザー管琁E sub={`${db.users.length} 名`} right={<button className="btn btn-p" onClick={()=>setInvite(true)}><Plus size={15}/>メンバ�Eを招征E/button>}/>
       <PMApprovalSection/>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:620}}>
           <thead><tr><th>ユーザー</th><th>メール</th><th>ロール</th><th/></tr></thead>
           <tbody>{db.users.map(u=>(
             <tr key={u.id}>
-              <td><span className="flex items-center gap-2"><Avatar user={u} size={26}/>{u.name}{u.id===user.id&&<Badge cls="b-blue">自分</Badge>}{u.pending&&<Badge cls="b-amber">PM承認待ち</Badge>}{!u.pending&&u.must_change&&<Badge cls="b-amber">仮PW</Badge>}</span></td>
+              <td><span className="flex items-center gap-2"><Avatar user={u} size={26}/>{u.name}{u.id===user.id&&<Badge cls="b-blue">自刁E/Badge>}{u.pending&&<Badge cls="b-amber">PM承認征E��</Badge>}{!u.pending&&u.must_change&&<Badge cls="b-amber">仮PW</Badge>}</span></td>
               <td className="text-xs" style={{color:"var(--muted)"}}>{u.email}</td>
               <td><select className="select" style={{width:110,padding:"4px 8px",fontSize:12}} value={u.role} onChange={e=>changeRole(u,e.target.value)} disabled={u.id===user.id||u.pending}><option value="PM">PM</option><option value="Member">Member</option></select></td>
               <td><div className="flex gap-1 justify-end">
-                <button className="btn btn-sm" onClick={()=>resetPw(u)}>PW再発行</button>
+                <button className="btn btn-sm" onClick={()=>resetPw(u)}>PW再発衁E/button>
                 {u.id!==user.id&&<button className="iconbtn" style={{width:30,height:30}} onClick={()=>del(u)}><Trash2 size={14}/></button>}
               </div></td>
             </tr>))}
           </tbody>
         </table>
       </div>
-      <Modal open={invite} onClose={()=>setInvite(false)} title="メンバーを招待">
-        <p className="text-xs mb-3" style={{color:"var(--muted)"}}>仮パスワードが発行されます。本人に共有してください。</p>
+      <Modal open={invite} onClose={()=>setInvite(false)} title="メンバ�Eを招征E>
+        <p className="text-xs mb-3" style={{color:"var(--muted)"}}>仮パスワードが発行されます。本人に共有してください、E/p>
         <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)}/></Field>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)}/></Field>
         <Field label="ロール"><select className="select" value={role} onChange={e=>setRole(e.target.value)}><option value="Member">Member</option><option value="PM">PM</option></select></Field>
-        <div className="flex justify-end gap-2 mt-4"><button className="btn" onClick={()=>setInvite(false)}>キャンセル</button><button className="btn btn-p" onClick={doInvite}>発行する</button></div>
+        <div className="flex justify-end gap-2 mt-4"><button className="btn" onClick={()=>setInvite(false)}>キャンセル</button><button className="btn btn-p" onClick={doInvite}>発行すめE/button></div>
       </Modal>
-      <Modal open={!!issued} onClose={()=>setIssued(null)} title="ログイン情報を発行しました">
+      <Modal open={!!issued} onClose={()=>setIssued(null)} title="ログイン惁E��を発行しました">
         {issued&&<div>
-          <div className="panel p-3 mb-3 mono text-sm" style={{background:"var(--panel2)",border:"none"}}>{issued.name}<br/>メール: {issued.email}<br/>仮パスワード: <b>{issued.pw}</b></div>
-          <p className="text-xs mb-3" style={{color:"var(--muted)"}}>この画面を閉じると再表示できません。</p>
-          <button className="btn btn-p w-full justify-center" onClick={()=>{navigator.clipboard&&navigator.clipboard.writeText(`${issued.email} / ${issued.pw}`);setIssued(null);}}><Copy size={14}/>コピーして閉じる</button>
+          <div className="panel p-3 mb-3 mono text-sm" style={{background:"var(--panel2)",border:"none"}}>{issued.name}<br/>メール: {issued.email}<br/>仮パスワーチE <b>{issued.pw}</b></div>
+          <p className="text-xs mb-3" style={{color:"var(--muted)"}}>こ�E画面を閉じると再表示できません、E/p>
+          <button className="btn btn-p w-full justify-center" onClick={()=>{navigator.clipboard&&navigator.clipboard.writeText(`${issued.email} / ${issued.pw}`);setIssued(null);}}><Copy size={14}/>コピ�Eして閉じめE/button>
         </div>}
       </Modal>
     </div>
@@ -2026,7 +2022,7 @@ function PMApprovalSection() {
   async function reject(u){await deleteRow("users",{id:u.id});toast(`${u.name} のPM申請を却下しました`);}
   return (
     <div className="panel p-4 mb-4" style={{borderColor:"var(--amber)"}}>
-      <SecTitle icon={Shield} title={`PM権限の申請 (${pending.length}件)`} tone="var(--amber)"/>
+      <SecTitle icon={Shield} title={`PM権限�E申諁E(${pending.length}件)`} tone="var(--amber)"/>
       <div className="flex flex-col gap-2">{pending.map(u=>(
         <div key={u.id} className="flex items-center gap-3 flex-wrap p-2 rounded-lg" style={{background:"var(--amber-bg)"}}>
           <Avatar user={u} size={30}/>
@@ -2034,7 +2030,7 @@ function PMApprovalSection() {
             <div className="text-sm font-bold">{u.name}</div>
             <div className="text-xs" style={{color:"var(--muted)"}}>{u.email}{u.pm_apply_reason&&` · ${u.pm_apply_reason}`}</div>
           </div>
-          <div className="flex gap-2"><button className="btn btn-d btn-sm" onClick={()=>reject(u)}><X size={13}/>却下</button><button className="btn btn-p btn-sm" onClick={()=>approve(u)}><Check size={13}/>承認</button></div>
+          <div className="flex gap-2"><button className="btn btn-d btn-sm" onClick={()=>reject(u)}><X size={13}/>却丁E/button><button className="btn btn-p btn-sm" onClick={()=>approve(u)}><Check size={13}/>承誁E/button></div>
         </div>))}
       </div>
     </div>
