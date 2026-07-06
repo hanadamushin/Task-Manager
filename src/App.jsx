@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer }
 
 const CSS = `
 /* fonts loaded via <link> in index.html */
+.kd *{ -webkit-tap-highlight-color:transparent; }
 .kd{ --bg:#F6F5F1; --panel:#FFFFFF; --panel2:#F0EEE7; --text:#1C1E26; --muted:#6A6F7A;
   --border:#E5E2D9; --ai:#2F5AA8; --ai-soft:#E7EDF8; --amber:#B7791F; --amber-bg:#FBF3E2;
   --red:#C43D3D; --red-bg:#FBEAEA; --green:#2F855A; --green-bg:#E6F4EC;
@@ -31,7 +32,8 @@ const CSS = `
 .ledger{ border-bottom:3px double var(--border); }
 .btn{ display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px;
   border:1px solid var(--border); background:var(--panel); color:var(--text); font-size:13px;
-  font-weight:500; cursor:pointer; transition:filter .12s, background .12s; white-space:nowrap; }
+  font-weight:500; cursor:pointer; transition:filter .12s, background .12s; white-space:nowrap;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .btn:hover{ background:var(--panel2); }
 .btn:disabled{ opacity:.45; cursor:not-allowed; }
 .btn-p{ background:var(--ai); border-color:var(--ai); color:#fff; }
@@ -42,7 +44,7 @@ const CSS = `
 .btn-sm{ padding:4px 10px; font-size:12px; border-radius:8px; }
 .iconbtn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px;
   border-radius:10px; border:1px solid transparent; background:transparent; color:var(--muted);
-  cursor:pointer; position:relative; }
+  cursor:pointer; position:relative; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .iconbtn:hover{ background:var(--panel2); color:var(--text); }
 .input,.select,.textarea{ width:100%; padding:8px 12px; border-radius:10px; border:1px solid var(--border);
   background:var(--panel); color:var(--text); font-size:14px; font-family:inherit; outline:none; }
@@ -70,11 +72,11 @@ const CSS = `
 .tbl tr.warn90 td{ background:var(--amber-bg); }
 .chip{ display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px;
   border:1px solid var(--border); background:var(--panel); color:var(--muted); font-size:12px;
-  font-weight:500; cursor:pointer; }
+  font-weight:500; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .chip.on{ background:var(--ai); border-color:var(--ai); color:#fff; }
 .kd.dark .chip.on{ color:#0E1320; }
 .navi{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
-  color:var(--muted); font-size:13.5px; font-weight:500; cursor:pointer; }
+  color:var(--muted); font-size:13.5px; font-weight:500; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .navi:hover{ background:var(--panel2); color:var(--text); }
 .navi.on{ background:var(--ai-soft); color:var(--ai); font-weight:700; }
 .modal-bg{ position:fixed; inset:0; background:rgba(10,12,18,.5); display:flex; align-items:flex-end;
