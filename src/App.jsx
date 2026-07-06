@@ -384,11 +384,30 @@ export default function App() {
     const ids=[...new Set(userIds)].filter(Boolean);
     if(!ids.length) return;
     const rows = ids.map(uid=>({id:uid(),user_id:uid,type,message,read:false,email:!!opts.email,k:opts.k||null,created_at:Date.now()}));
-    // k重複チェック
     const filtered = opts.k
       ? rows.filter(r=>!db.notifications.some(n=>n.user_id===r.user_id&&n.k===opts.k))
       : rows;
-    if(filtered.length) { await sb.insert("notifications", filtered); await loadAll(); }
+    if(filtered.length) {
+      await sb.insert("notifications", filtered);
+      await loadAll();
+      // メール送信
+      if(opts.email) {
+        const emailTargets = ids.map(uid=>{const u=db.users.find(x=>x.id===uid);return u?u.email:null;}).filter(Boolean);
+        if(emailTargets.length) {
+          try {
+            await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/send-email", {
+              method:"POST",
+              headers:{"Content-Type":"application/json","Authorization":"Bearer sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY"},
+              body:JSON.stringify({
+                to: emailTargets,
+                subject: "【FN.Task】"+message.slice(0,50),
+                html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px"><h2 style="color:#2F5AA8;margin-bottom:8px">FN.Task</h2><p style="font-size:15px;color:#1C1E26">${message}</p><hr style="border:none;border-top:1px solid #E5E2D9;margin:20px 0"/><p style="font-size:12px;color:#6A6F7A">このメールはFN.Taskから自動送信されています。<br/><a href="https://task-manager-tau-two-25.vercel.app" style="color:#2F5AA8">FN.Taskを開く</a></p></div>`
+              })
+            });
+          } catch(e) { console.warn("メール送信失敗:", e); }
+        }
+      }
+    }
   }
   const pmIds = () => db.users.filter(u=>u.role==="PM"&&!u.pending).map(u=>u.id);
 
