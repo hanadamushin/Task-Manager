@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, createContext, useContext } from "react";
-import { createClient } from "@supabase/supabase-js";
 import {
   Bell, Plus, Play, Square, Check, X, Clock, AlertTriangle, Search, Sun, Moon,
   LogOut, User, Users, Home, Briefcase, Calendar, ChevronRight, ChevronDown,
@@ -10,16 +9,58 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer } from "recharts";
 
 /* ============================================================
-   FN.Task — Supabase Auth版
+   FN.Task — Supabase対応版
    ============================================================ */
 
-const SUPABASE_URL = "https://bfzqetdxpzcrgngszueg.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ---------- Supabase設定 ---------- */
+const SB_URL = process.env.REACT_APP_SUPABASE_URL;
+const SB_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+async function sbFetch(path, options = {}) {
+  const url = SB_URL + "/rest/v1" + path;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SB_KEY,
+      "Authorization": "Bearer " + SB_KEY,
+      "Prefer": options.prefer || "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error("Supabase error: " + err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+const sb = {
+  async select(table, query = "") {
+    return sbFetch("/" + table + "?" + query);
+  },
+  async insert(table, data) {
+    const rows = Array.isArray(data) ? data : [data];
+    return sbFetch("/" + table, { method: "POST", body: JSON.stringify(rows) });
+  },
+  async update(table, match, data) {
+    const q = Object.entries(match).map(([k, v]) => `${k}=eq.${encodeURIComponent(v)}`).join("&");
+    return sbFetch("/" + table + "?" + q, { method: "PATCH", body: JSON.stringify(data) });
+  },
+  async upsert(table, data) {
+    const rows = Array.isArray(data) ? data : [data];
+    return sbFetch("/" + table, { method: "POST", body: JSON.stringify(rows), prefer: "resolution=merge-duplicates,return=representation" });
+  },
+  async delete(table, match) {
+    const q = Object.entries(match).map(([k, v]) => `${k}=eq.${encodeURIComponent(v)}`).join("&");
+    return sbFetch("/" + table + "?" + q, { method: "DELETE", prefer: "return=minimal" });
+  },
+};
 
 /* ---------- CSS ---------- */
 const CSS = `
-.kd *{ -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
+.kd *{ -webkit-tap-highlight-color:transparent; }
 .kd{ --bg:#F6F5F1; --panel:#FFFFFF; --panel2:#F0EEE7; --text:#1C1E26; --muted:#6A6F7A;
   --border:#E5E2D9; --ai:#2F5AA8; --ai-soft:#E7EDF8; --amber:#B7791F; --amber-bg:#FBF3E2;
   --red:#C43D3D; --red-bg:#FBEAEA; --green:#2F855A; --green-bg:#E6F4EC;
@@ -28,17 +69,19 @@ const CSS = `
 .kd.dark{ --bg:#12141A; --panel:#1A1D25; --panel2:#22262F; --text:#E9EAEE; --muted:#979DA9;
   --border:#2A2E39; --ai:#7FA4E8; --ai-soft:#1F2B44; --amber:#F0B429; --amber-bg:#332A14;
   --red:#E8706A; --red-bg:#3A2020; --green:#57B98A; --green-bg:#16301F; }
-.wordmark{ font-family:'Shippori Mincho',serif; font-weight:600; letter-spacing:.14em; }
-.num{ font-variant-numeric:tabular-nums; }
+.kd *{ box-sizing:border-box; }
+.wordmark{ font-family:'Shippori Mincho', serif; font-weight:600; letter-spacing:.14em; }
+.num{ font-variant-numeric: tabular-nums; }
 .panel{ background:var(--panel); border:1px solid var(--border); border-radius:14px; }
 .ledger{ border-bottom:3px double var(--border); }
 .btn{ display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px;
   border:1px solid var(--border); background:var(--panel); color:var(--text); font-size:13px;
-  font-weight:500; cursor:pointer; transition:filter .12s,background .12s; white-space:nowrap;
-  touch-action:manipulation; }
+  font-weight:500; cursor:pointer; transition:filter .12s, background .12s; white-space:nowrap;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .btn:hover{ background:var(--panel2); }
 .btn:disabled{ opacity:.45; cursor:not-allowed; }
 .btn-p{ background:var(--ai); border-color:var(--ai); color:#fff; }
+.kd.dark .btn-p{ color:#0E1320; }
 .btn-p:hover{ filter:brightness(1.08); background:var(--ai); }
 .btn-d{ background:transparent; border-color:var(--red); color:var(--red); }
 .btn-d:hover{ background:var(--red-bg); }
@@ -67,7 +110,7 @@ const CSS = `
 .tbl{ width:100%; border-collapse:collapse; font-size:13px; }
 .tbl th{ text-align:left; padding:8px 10px; color:var(--muted); font-size:11px; font-weight:700;
   border-bottom:3px double var(--border); white-space:nowrap; user-select:none; }
-.tbl th.sort{ cursor:pointer; }
+.tbl th.sort{ cursor:pointer; } .tbl th.sort:hover{ color:var(--text); }
 .tbl td{ padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
 .tbl tr.click{ cursor:pointer; } .tbl tr.click:hover td{ background:var(--panel2); }
 .tbl tr.warn90 td{ background:var(--amber-bg); }
@@ -75,6 +118,7 @@ const CSS = `
   border:1px solid var(--border); background:var(--panel); color:var(--muted); font-size:12px;
   font-weight:500; cursor:pointer; touch-action:manipulation; }
 .chip.on{ background:var(--ai); border-color:var(--ai); color:#fff; }
+.kd.dark .chip.on{ color:#0E1320; }
 .navi{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
   color:var(--muted); font-size:13.5px; font-weight:500; cursor:pointer; touch-action:manipulation; }
 .navi:hover{ background:var(--panel2); color:var(--text); }
@@ -107,12 +151,12 @@ const CSS = `
 `;
 
 /* ---------- ユーティリティ ---------- */
-const uid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36);
-const genPw = () => Math.random().toString(36).slice(2,6)+Math.random().toString(36).slice(2,6);
-const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
-const fmtYen = n => "¥"+Math.round(Number(n)||0).toLocaleString("ja-JP");
-const fmtHM = min => { const m=Math.round(min||0); return `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")}`; };
-const fmtHMS = sec => { sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60; return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; };
+const uid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+const genPw = () => Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6);
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const fmtYen = n => "¥" + Math.round(Number(n)||0).toLocaleString("ja-JP");
+const fmtHM = min => { const m = Math.round(min||0); return `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")}`; };
+const fmtHMS = sec => { sec = Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60; return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; };
 const fmtDate = s => { if(!s) return "—"; const d=new Date(s); return `${d.getMonth()+1}/${d.getDate()}`; };
 const fmtDT = ts => { const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
 const daysUntil = s => { if(!s) return 9999; return Math.floor((new Date(s+"T23:59:59")-new Date())/864e5); };
@@ -120,86 +164,147 @@ const weekRange = () => { const d=new Date(),day=(d.getDay()+6)%7,s=new Date(d);
 const monthRange = () => { const d=new Date(),s=new Date(d.getFullYear(),d.getMonth(),1),e=new Date(d.getFullYear(),d.getMonth()+1,1); return [s.getTime(),e.getTime()]; };
 const clamp01 = x => Math.max(0,Math.min(1,x||0));
 const AV_COLORS = ["#2F5AA8","#8C5AA8","#B7791F","#2F855A","#C43D3D","#3A7CA5","#7A6A4F","#5A67A8"];
-const LS = { get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}, set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}, del:k=>{try{localStorage.removeItem(k);}catch(e){}} };
 
-/* ---------- Supabase DB操作 ---------- */
-const db_select = async (table, query="") => { const {data,error}=await supabase.from(table).select("*"); if(error) throw error; return data||[]; };
-const db_select_q = async (table, filters={}, order=null, limit=null) => {
-  let q = supabase.from(table).select("*");
-  Object.entries(filters).forEach(([k,v])=>{ q=q.eq(k,v); });
-  if(order) q=q.order(order.col,{ascending:order.asc});
-  if(limit) q=q.limit(limit);
-  const {data,error}=await q; if(error) throw error; return data||[];
+async function sha(pw, salt) {
+  const data = new TextEncoder().encode(salt + "::" + pw);
+  const h = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+/* ---------- セッション (localStorage) ---------- */
+const LS = {
+  get: k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch(e){return null;} },
+  set: (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(e){} },
+  del: k => { try { localStorage.removeItem(k); } catch(e){} },
 };
-const db_insert = async (table, data) => { const rows=Array.isArray(data)?data:[data]; const {error}=await supabase.from(table).insert(rows); if(error) throw error; };
-const db_update = async (table, match, data) => { let q=supabase.from(table).update(data); Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);}); const {error}=await q; if(error) throw error; };
-const db_delete = async (table, match) => { let q=supabase.from(table).delete(); Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);}); const {error}=await q; if(error) throw error; };
 
 /* ---------- 定数 ---------- */
-const ST={todo:"未着手",in_progress:"進行中",done:"完了"};
-const ST_BADGE={todo:"b-slate",in_progress:"b-blue",done:"b-green"};
-const PR={high:"高",medium:"中",low:"低"};
-const PR_BADGE={high:"b-red",medium:"b-amber",low:"b-slate"};
-const PJST={active:"進行中",paused:"一時停止",completed:"完了"};
-const PJ_BADGE={active:"b-blue",paused:"b-amber",completed:"b-green"};
-const NT_META={
-  assign:{icon:ClipboardList},request:{icon:Inbox},approve:{icon:CheckCircle2},
-  reject:{icon:XCircle},limit90:{icon:AlertTriangle},over:{icon:AlertTriangle},
-  deadline:{icon:Calendar},done:{icon:CheckCircle2},mention:{icon:MessageSquare},
-  extend:{icon:Calendar},system:{icon:Info},
+const ST = {todo:"未着手",in_progress:"進行中",done:"完了"};
+const ST_BADGE = {todo:"b-slate",in_progress:"b-blue",done:"b-green"};
+const PR = {high:"高",medium:"中",low:"低"};
+const PR_BADGE = {high:"b-red",medium:"b-amber",low:"b-slate"};
+const PJST = {active:"進行中",paused:"一時停止",completed:"完了"};
+const PJ_BADGE = {active:"b-blue",paused:"b-amber",completed:"b-green"};
+const NT_META = {
+  assign:{icon:ClipboardList,label:"割当"}, request:{icon:Inbox,label:"申請"},
+  approve:{icon:CheckCircle2,label:"承認"}, reject:{icon:XCircle,label:"却下"},
+  limit90:{icon:AlertTriangle,label:"90%超過"}, over:{icon:AlertTriangle,label:"上限超過"},
+  deadline:{icon:Calendar,label:"期日"}, done:{icon:CheckCircle2,label:"完了報告"},
+  mention:{icon:MessageSquare,label:"コメント"}, extend:{icon:Calendar,label:"期日延長"},
+  system:{icon:Info,label:"お知らせ"},
 };
 
-/* ---------- 集計 ---------- */
-const workedMin = (logs,taskId) => logs.filter(l=>l.task_id===taskId).reduce((a,l)=>a+(l.duration_min||0),0);
-const taskRatio = (t,worked) => t.status==="done"?1:(t.max_minutes>0?clamp01(worked/t.max_minutes):0);
-function projectStats(p,tasks,logs) {
-  const pts=tasks.filter(t=>t.project_id===p.id);
-  const done=pts.filter(t=>t.status==="done").length;
-  const alloc=pts.reduce((a,t)=>a+(t.budget||0),0);
-  const consumed=pts.reduce((a,t)=>a+(t.budget||0)*taskRatio(t,workedMin(logs,t.id)),0);
-  return{total:pts.length,done,progress:pts.length?done/pts.length:0,alloc,consumed,remain:(p.budget||0)-alloc,consumedRate:p.budget>0?consumed/p.budget:0};
+/* ---------- 集計ヘルパー ---------- */
+const workedMin = (logs, taskId) => logs.filter(l=>l.task_id===taskId).reduce((a,l)=>a+(l.duration_min||0),0);
+const taskRatio = (t, worked) => t.status==="done"?1:(t.max_minutes>0?clamp01(worked/t.max_minutes):0);
+function projectStats(p, tasks, logs) {
+  const pts = tasks.filter(t=>t.project_id===p.id);
+  const done = pts.filter(t=>t.status==="done").length;
+  const alloc = pts.reduce((a,t)=>a+(t.budget||0),0);
+  const consumed = pts.reduce((a,t)=>a+(t.budget||0)*taskRatio(t,workedMin(logs,t.id)),0);
+  return { total:pts.length, done, progress:pts.length?done/pts.length:0,
+    alloc, consumed, remain:(p.budget||0)-alloc, consumedRate:p.budget>0?consumed/p.budget:0 };
 }
 
 /* ---------- Claude API ---------- */
-async function callClaude(messages,extra={}) {
-  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages,...extra})});
+async function callClaude(messages, extra={}) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({model:"claude-sonnet-4-6", max_tokens:1000, messages, ...extra}),
+  });
   if(!res.ok) throw new Error("APIエラー ("+res.status+")");
   return await res.json();
 }
 const textOf = data => (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-function parseJsonArray(text){const c=text.replace(/```json|```/g,"").trim();const m=c.match(/\[[\s\S]*\]/);return JSON.parse(m?m[0]:c);}
-function parseJsonObject(text){const c=text.replace(/```json|```/g,"").trim();const m=c.match(/\{[\s\S]*\}/);return JSON.parse(m?m[0]:c);}
-const csvEsc = v=>{const s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
-const toCSV = rows=>rows.map(r=>r.map(csvEsc).join(",")).join("\r\n");
-function tryDownload(filename,text){try{const b=new Blob(["\uFEFF"+text],{type:"text/csv;charset=utf-8"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return true;}catch(e){return false;}}
+function parseJsonArray(text) { const c=text.replace(/```json|```/g,"").trim(); const m=c.match(/\[[\s\S]*\]/); return JSON.parse(m?m[0]:c); }
+function parseJsonObject(text) { const c=text.replace(/```json|```/g,"").trim(); const m=c.match(/\{[\s\S]*\}/); return JSON.parse(m?m[0]:c); }
+
+/* ---------- CSV ---------- */
+const csvEsc = v => { const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+const toCSV = rows => rows.map(r=>r.map(csvEsc).join(",")).join("\r\n");
+function tryDownload(filename, text) {
+  try { const b=new Blob(["\uFEFF"+text],{type:"text/csv;charset=utf-8"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); return true; } catch(e){ return false; }
+}
 
 /* ---------- Context ---------- */
 const Ctx = createContext(null);
 const useApp = () => useContext(Ctx);
 
 /* ---------- 汎用UI ---------- */
-function Avatar({user,size=28}){if(!user)return <span className="avatar" style={{width:size,height:size,background:"var(--border)",fontSize:size*0.4}}>—</span>;return <span className="avatar" title={user.name} style={{width:size,height:size,background:user.avatar_color||AV_COLORS[0],fontSize:size*0.42}}>{user.name.slice(0,1)}</span>;}
-function Badge({cls,children,dot}){return <span className={"badge "+cls}>{dot&&<i/>}{children}</span>;}
-function Prog({ratio,tone}){const r=clamp01(ratio);const cls=tone||(r>=1?"over":r>=0.9?"warn":"");return <div className="prog"><i className={cls} style={{width:(r*100).toFixed(1)+"%"}}/></div>;}
-function Modal({open,onClose,title,children,wide,noClose}){if(!open)return null;return <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget&&!noClose)onClose();}}><div className={"modal"+(wide?" wide":"")}><div className="flex items-center justify-between mb-4"><h3 className="text-base font-bold m-0">{title}</h3>{!noClose&&<button className="iconbtn" onClick={onClose}><X size={18}/></button>}</div>{children}</div></div>;}
-function Field({label,error,children,hint}){return <div className="mb-3"><label className="lbl">{label}</label>{children}{hint&&!error&&<div className="text-xs mt-1" style={{color:"var(--muted)"}}>{hint}</div>}{error&&<div className="err">{error}</div>}</div>;}
-function Empty({icon:I=Inbox,text}){return <div className="flex flex-col items-center gap-2 py-10" style={{color:"var(--muted)"}}><I size={28} strokeWidth={1.5}/><div className="text-sm">{text}</div></div>;}
-function Seg({options,value,onChange}){return <div className="flex gap-2 flex-wrap">{options.map(o=><button key={o.value} className={"chip"+(value===o.value?" on":"")} onClick={()=>onChange(o.value)}>{o.label}</button>)}</div>;}
-function SecTitle({icon:I,title,tone}){return <div className="flex items-center gap-2 mb-3 text-sm font-bold" style={{color:tone||"var(--text)"}}><I size={15}/>{title}</div>;}
-function MiniStat({label,value,mono,warn}){return <div className="panel p-3" style={{background:"var(--panel2)",border:"none"}}><div className="text-xs mb-1" style={{color:"var(--muted)"}}>{label}</div><div className={"text-sm font-bold"+(mono?" mono":"")} style={warn?{color:"var(--amber)"}:{}}>{value}</div></div>;}
-function StatCard({label,value,unit,warn,mono,onClick}){return <div className={"panel p-4"+(onClick?" cursor-pointer":"")} onClick={onClick} style={warn?{borderColor:"var(--amber)"}:{}}><div className="text-xs mb-1" style={{color:"var(--muted)"}}>{label}</div><div className={"stat"+(mono?" mono":"")} style={warn?{color:"var(--amber)"}:{}}>{value}<span className="text-xs font-medium ml-1" style={{color:"var(--muted)"}}>{unit}</span></div></div>;}
-function AlertRow({tone,text,onClick}){const c=tone==="red"?"var(--red)":tone==="amber"?"var(--amber)":"var(--ai)";const bg=tone==="red"?"var(--red-bg)":tone==="amber"?"var(--amber-bg)":"var(--ai-soft)";return <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer" style={{background:bg,color:c}} onClick={onClick}><AlertTriangle size={14} style={{flexShrink:0}}/><span className="flex-1">{text}</span><ChevronRight size={14}/></div>;}
-function PageTitle({title,sub,back,right}){return <div className="flex items-start gap-3 mb-5 flex-wrap">{back&&<button className="iconbtn" onClick={back}><ArrowLeft size={18}/></button>}<div className="flex-1" style={{minWidth:200}}><h1 className="text-xl font-bold m-0 ledger pb-2 inline-block pr-6">{title}</h1>{sub&&<div className="text-xs mt-2" style={{color:"var(--muted)"}}>{sub}</div>}</div>{right}</div>;}
-function BrandMark({size=30}){return <div className="flex items-center gap-3"><div className="flex flex-col" style={{gap:3}}><span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2}}/><span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2,opacity:0.45}}/></div><span className="wordmark" style={{fontSize:size}}>FN.Task</span></div>;}
+function Avatar({user, size=28}) {
+  if(!user) return <span className="avatar" style={{width:size,height:size,background:"var(--border)",fontSize:size*0.4}}>—</span>;
+  return <span className="avatar" title={user.name} style={{width:size,height:size,background:user.avatar_color||AV_COLORS[0],fontSize:size*0.42}}>{user.name.slice(0,1)}</span>;
+}
+function Badge({cls, children, dot}) { return <span className={"badge "+cls}>{dot&&<i/>}{children}</span>; }
+function Prog({ratio, tone}) { const r=clamp01(ratio); const cls=tone||(r>=1?"over":r>=0.9?"warn":""); return <div className="prog"><i className={cls} style={{width:(r*100).toFixed(1)+"%"}}/></div>; }
+function Modal({open, onClose, title, children, wide, noClose}) {
+  if(!open) return null;
+  return <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget&&!noClose)onClose();}}>
+    <div className={"modal"+(wide?" wide":"")}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold m-0">{title}</h3>
+        {!noClose&&<button className="iconbtn" onClick={onClose} aria-label="閉じる"><X size={18}/></button>}
+      </div>
+      {children}
+    </div>
+  </div>;
+}
+function Field({label, error, children, hint}) {
+  return <div className="mb-3"><label className="lbl">{label}</label>{children}{hint&&!error&&<div className="text-xs mt-1" style={{color:"var(--muted)"}}>{hint}</div>}{error&&<div className="err">{error}</div>}</div>;
+}
+function Empty({icon:I=Inbox, text}) {
+  return <div className="flex flex-col items-center gap-2 py-10" style={{color:"var(--muted)"}}><I size={28} strokeWidth={1.5}/><div className="text-sm">{text}</div></div>;
+}
+function Seg({options, value, onChange}) {
+  return <div className="flex gap-2 flex-wrap">{options.map(o=><button key={o.value} className={"chip"+(value===o.value?" on":"")} onClick={()=>onChange(o.value)}>{o.label}</button>)}</div>;
+}
+function SecTitle({icon:I, title, tone}) {
+  return <div className="flex items-center gap-2 mb-3 text-sm font-bold" style={{color:tone||"var(--text)"}}><I size={15}/>{title}</div>;
+}
+function MiniStat({label, value, mono, warn}) {
+  return <div className="panel p-3" style={{background:"var(--panel2)",border:"none"}}>
+    <div className="text-xs mb-1" style={{color:"var(--muted)"}}>{label}</div>
+    <div className={"text-sm font-bold"+(mono?" mono":"")} style={warn?{color:"var(--amber)"}:{}}>{value}</div>
+  </div>;
+}
+function StatCard({label, value, unit, warn, mono, onClick}) {
+  return <div className={"panel p-4"+(onClick?" cursor-pointer":"")} onClick={onClick} style={warn?{borderColor:"var(--amber)"}:{}}>
+    <div className="text-xs mb-1" style={{color:"var(--muted)"}}>{label}</div>
+    <div className={"stat"+(mono?" mono":"")} style={warn?{color:"var(--amber)"}:{}}>{value}<span className="text-xs font-medium ml-1" style={{color:"var(--muted)"}}>{unit}</span></div>
+  </div>;
+}
+function AlertRow({tone, text, onClick}) {
+  const c=tone==="red"?"var(--red)":tone==="amber"?"var(--amber)":"var(--ai)";
+  const bg=tone==="red"?"var(--red-bg)":tone==="amber"?"var(--amber-bg)":"var(--ai-soft)";
+  return <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer" style={{background:bg,color:c}} onClick={onClick}><AlertTriangle size={14} style={{flexShrink:0}}/><span className="flex-1">{text}</span><ChevronRight size={14}/></div>;
+}
+function PageTitle({title, sub, back, right}) {
+  return <div className="flex items-start gap-3 mb-5 flex-wrap">
+    {back&&<button className="iconbtn" onClick={back} aria-label="戻る"><ArrowLeft size={18}/></button>}
+    <div className="flex-1" style={{minWidth:200}}>
+      <h1 className="text-xl font-bold m-0 ledger pb-2 inline-block pr-6">{title}</h1>
+      {sub&&<div className="text-xs mt-2" style={{color:"var(--muted)"}}>{sub}</div>}
+    </div>
+    {right}
+  </div>;
+}
+function BrandMark({size=30}) {
+  return <div className="flex items-center gap-3">
+    <div className="flex flex-col" style={{gap:3}}>
+      <span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2}}/>
+      <span style={{display:"block",width:size+6,height:3,background:"var(--ai)",borderRadius:2,opacity:0.45}}/>
+    </div>
+    <span className="wordmark" style={{fontSize:size}}>FN.Task</span>
+  </div>;
+}
 
 /* ============================================================
-   App Root — Supabase Auth版
+   App Root — Supabase版データ管理
    ============================================================ */
 export default function App() {
-  const [dbState, setDbState] = useState({users:[],projects:[],tasks:[],worklogs:[],requests:[],notifications:[],comments:[]});
-  const [authUser, setAuthUser] = useState(null); // Supabase auth user
-  const [profile, setProfile] = useState(null);   // public.users row
+  const [db, setDb] = useState({users:[],projects:[],tasks:[],worklogs:[],requests:[],notifications:[],comments:[]});
   const [loaded, setLoaded] = useState(false);
+  const [session, setSession] = useState(null);
   const [theme, setTheme] = useState("light");
   const [view, setView] = useState({page:"dash"});
   const [timer, setTimer] = useState(null);
@@ -210,167 +315,144 @@ export default function App() {
   const [openTaskId, setOpenTaskId] = useState(null);
   const toastT = useRef(null);
 
+  const user = useMemo(()=>session?db.users.find(u=>u.id===session.userId)||null:null,[session,db.users]);
+
   /* --- 全データ取得 --- */
   async function loadAll() {
     try {
-      const [u,p,t,wl,req,notif,com] = await Promise.all([
-        supabase.from("users").select("*").then(r=>r.data||[]),
-        supabase.from("projects").select("*").order("created_at",{ascending:false}).then(r=>r.data||[]),
-        supabase.from("tasks").select("*").order("created_at",{ascending:false}).then(r=>r.data||[]),
-        supabase.from("worklogs").select("*").order("started_at",{ascending:false}).limit(2000).then(r=>r.data||[]),
-        supabase.from("requests").select("*").order("requested_at",{ascending:false}).then(r=>r.data||[]),
-        supabase.from("notifications").select("*").order("created_at",{ascending:false}).limit(400).then(r=>r.data||[]),
-        supabase.from("comments").select("*").order("created_at",{ascending:true}).then(r=>r.data||[]),
+      const [users,projects,tasks,worklogs,requests,notifications,comments] = await Promise.all([
+        sb.select("users","order=created_at.asc"),
+        sb.select("projects","order=created_at.desc"),
+        sb.select("tasks","order=created_at.desc"),
+        sb.select("worklogs","order=started_at.desc&limit=2000"),
+        sb.select("requests","order=requested_at.desc"),
+        sb.select("notifications","order=created_at.desc&limit=400"),
+        sb.select("comments","order=created_at.asc"),
       ]);
-      setDbState({users:u,projects:p,tasks:t,worklogs:wl,requests:req,notifications:notif,comments:com});
-      return {users:u,projects:p,tasks:t,worklogs:wl,requests:req,notifications:notif,comments:com};
+      setDb({users,projects,tasks,worklogs,requests,notifications,comments});
+      return {users,projects,tasks,worklogs,requests,notifications,comments};
     } catch(e) { console.error("loadAll failed",e); return null; }
   }
 
-  /* --- 初期化: Supabase Authセッション確認 --- */
+  /* --- 初期化 --- */
   useEffect(()=>{
-    const th=LS.get("fn:theme"); if(th) setTheme(th);
-    const tm=LS.get("fn:timer"); if(tm&&tm.taskId) setTimer(tm);
-
-    supabase.auth.getSession().then(async({data:{session}})=>{
-      if(session) {
-        setAuthUser(session.user);
-        const data = await loadAll();
-        if(data) {
-          const prof = data.users.find(u=>u.auth_id===session.user.id || u.email===session.user.email);
-          if(prof&&!prof.pending) setProfile(prof);
-          else await supabase.auth.signOut();
-        }
+    (async()=>{
+      const th = LS.get("fn:theme"); if(th) setTheme(th);
+      const ses = LS.get("fn:session");
+      const data = await loadAll();
+      if(ses&&ses.exp>Date.now()&&data) {
+        const u = data.users.find(x=>x.id===ses.userId);
+        if(u&&!u.pending) { setSession(ses); }
+        else LS.del("fn:session");
       }
+      const tm = LS.get("fn:timer"); if(tm&&tm.taskId) setTimer(tm);
       setLoaded(true);
-    });
-
-    const {data:{subscription}} = supabase.auth.onAuthStateChange(async(event,session)=>{
-      if(event==="SIGNED_IN"&&session) {
-        setAuthUser(session.user);
-        const data = await loadAll();
-        if(data) {
-          const prof = data.users.find(u=>u.auth_id===session.user.id || u.email===session.user.email);
-          if(prof&&!prof.pending) setProfile(prof);
-        }
-      } else if(event==="SIGNED_OUT") {
-        setAuthUser(null); setProfile(null);
-      }
-    });
-    return ()=>subscription.unsubscribe();
+    })();
   },[]);
+
+  /* --- セッション復元時に期日スキャン --- */
+  const scanned = useRef(false);
+  useEffect(()=>{
+    if(loaded&&user&&!scanned.current){ scanned.current=true; runDeadlineScan(user); }
+  },[loaded,user]);
 
   /* --- タイマー刻み --- */
   useEffect(()=>{ if(!timer) return; const id=setInterval(()=>setNow(Date.now()),1000); return()=>clearInterval(id); },[timer]);
 
-  /* --- 定期リフレッシュ30秒 --- */
-  useEffect(()=>{ const id=setInterval(()=>{ if(loaded&&profile) loadAll(); },30000); return()=>clearInterval(id); },[loaded,profile]);
+  /* --- 定期リフレッシュ (30秒) --- */
+  useEffect(()=>{ const id=setInterval(()=>{ if(loaded) loadAll(); },30000); return()=>clearInterval(id); },[loaded]);
 
   async function refresh() { await loadAll(); }
 
   /* --- DB操作ヘルパー --- */
-  async function insertRow(table,data){const rows=Array.isArray(data)?data:[data];const {error}=await supabase.from(table).insert(rows);if(error)throw error;await loadAll();}
-  async function updateRow(table,match,data){let q=supabase.from(table).update(data);Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);});const {error}=await q;if(error)throw error;await loadAll();}
-  async function deleteRow(table,match){let q=supabase.from(table).delete();Object.entries(match).forEach(([k,v])=>{q=q.eq(k,v);});const {error}=await q;if(error)throw error;await loadAll();}
+  async function insertRow(table, data) {
+    const row = await sb.insert(table, data);
+    await loadAll();
+    return row;
+  }
+  async function updateRow(table, match, data) {
+    await sb.update(table, match, data);
+    await loadAll();
+  }
+  async function deleteRow(table, match) {
+    await sb.delete(table, match);
+    await loadAll();
+  }
 
   /* --- 通知 --- */
-  async function notifyUsers(userIds,type,message,opts={}){
+  async function notifyUsers(userIds, type, message, opts={}) {
     const ids=[...new Set(userIds)].filter(Boolean);
     if(!ids.length) return;
-    const rows=ids.map(uid=>({id:uid(),user_id:uid,type,message,read:false,email:!!opts.email,k:opts.k||null,created_at:Date.now()}));
-    const filtered=opts.k?rows.filter(r=>!dbState.notifications.some(n=>n.user_id===r.user_id&&n.k===opts.k)):rows;
-    if(filtered.length){await supabase.from("notifications").insert(filtered);await loadAll();}
+    const rows = ids.map(uid=>({id:uid(),user_id:uid,type,message,read:false,email:!!opts.email,k:opts.k||null,created_at:Date.now()}));
+    // k重複チェック
+    const filtered = opts.k
+      ? rows.filter(r=>!db.notifications.some(n=>n.user_id===r.user_id&&n.k===opts.k))
+      : rows;
+    if(filtered.length) { await sb.insert("notifications", filtered); await loadAll(); }
   }
-  const pmIds = () => dbState.users.filter(u=>u.role==="PM"&&!u.pending).map(u=>u.id);
+  const pmIds = () => db.users.filter(u=>u.role==="PM"&&!u.pending).map(u=>u.id);
 
   /* --- トースト・確認 --- */
-  function toast(msg){setToastMsg(msg);if(toastT.current)clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(null),2800);}
-  function ask(msg){return new Promise(resolve=>setConfirmReq({msg,resolve}));}
-  function nav(page,params={}){setView({page,...params});}
+  function toast(msg) { setToastMsg(msg); if(toastT.current) clearTimeout(toastT.current); toastT.current=setTimeout(()=>setToastMsg(null),2800); }
+  function ask(msg) { return new Promise(resolve=>setConfirmReq({msg,resolve})); }
+  function nav(page, params={}) { setView({page,...params}); }
 
   /* --- 認証 --- */
-  async function doLogin(email,pw) {
-    const {error} = await supabase.auth.signInWithPassword({email:email.trim().toLowerCase(),password:pw});
-    if(error) {
-      if(error.message.includes("Invalid login")) return "メールアドレスまたはパスワードが正しくありません";
-      return error.message;
-    }
-    // profileはonAuthStateChangeで設定されるが、pendingチェックを追加
-    const {data} = await supabase.from("users").select("*").eq("email",email.trim().toLowerCase()).single();
-    if(data&&data.pending) {
-      await supabase.auth.signOut();
-      return "PM権限の申請が承認待ちです。既存のPMによる承認をお待ちください。";
-    }
+  async function doLogin(email, pw) {
+    const users = await sb.select("users",`email=eq.${encodeURIComponent(email.trim().toLowerCase())}`);
+    const u = users[0];
+    if(!u) return "メールアドレスが見つかりません";
+    const h = await sha(pw, u.salt);
+    if(h!==u.pass_hash) return "パスワードが正しくありません";
+    if(u.pending) return "PM権限の申請が承認待ちです。既存のPMによる承認をお待ちください。";
+    const ses = {userId:u.id, exp:Date.now()+7*864e5};
+    LS.set("fn:session",ses);
+    setSession(ses);
+    await loadAll();
+    nav(u.role==="PM"?"dash":"mydash");
     return null;
   }
-
-  async function doSignUp(email,pw,name,role="Member",reason="") {
-    const em=email.trim().toLowerCase();
-    // メール重複チェック
-    const {data:existing}=await supabase.from("users").select("id").eq("email",em);
-    if(existing&&existing.length) return "そのメールアドレスはすでに登録されています";
-    // Supabase Authにサインアップ
-    const {data:authData,error:authError}=await supabase.auth.signUp({email:em,password:pw});
-    if(authError) return authError.message;
-    const authId = authData.user?.id;
-    // public.usersに追加
-    const {data:allUsers}=await supabase.from("users").select("id");
-    const nu={id:uid(),auth_id:authId,name:name.trim(),email:em,role,avatar_color:AV_COLORS[(allUsers||[]).length%AV_COLORS.length],pending:role==="PM",must_change:false,pm_apply_reason:reason,created_at:Date.now()};
-    const {error:insertError}=await supabase.from("users").insert(nu);
-    if(insertError) return insertError.message;
-    // PMへ通知
-    const {data:pms}=await supabase.from("users").select("id").eq("role","PM").eq("pending",false);
-    if(pms&&pms.length){
-      const msg=role==="PM"?`PM権限申請: ${name} (${em})${reason?" — "+reason:""}`:`新しいMemberが登録しました: ${name} (${em})`;
-      await supabase.from("notifications").insert(pms.map(p=>({id:uid(),user_id:p.id,type:"system",message:msg,read:false,email:false,k:null,created_at:Date.now()})));
-    }
-    if(role==="PM") {
-      await supabase.auth.signOut();
-      return null; // 申請完了(ログインしない)
-    }
-    return null;
-  }
-
-  async function doLogout(){await supabase.auth.signOut();setView({page:"dash"});}
-  async function setTheme2(t){setTheme(t);LS.set("fn:theme",t);}
+  async function doLogout() { LS.del("fn:session"); setSession(null); setView({page:"dash"}); }
+  async function setTheme2(t) { setTheme(t); LS.set("fn:theme",t); }
 
   /* --- 期日リマインダー --- */
-  async function runDeadlineScan(){
-    const tasks=dbState.tasks.filter(t=>t.status!=="done"&&t.assigned_user_id&&t.deadline&&daysUntil(t.deadline)>=0&&daysUntil(t.deadline)<=3);
+  async function runDeadlineScan(u) {
+    const tasks = db.tasks.filter(t=>t.status!=="done"&&t.assigned_user_id&&t.deadline&&daysUntil(t.deadline)>=0&&daysUntil(t.deadline)<=3);
     for(const t of tasks) await notifyUsers([t.assigned_user_id],"deadline",`「${t.title}」の期日が${daysUntil(t.deadline)===0?"今日":daysUntil(t.deadline)+"日後"}です (${t.deadline})`,{k:"dl:"+t.id+":"+t.deadline});
   }
-  const scanned=useRef(false);
-  useEffect(()=>{if(loaded&&profile&&!scanned.current){scanned.current=true;runDeadlineScan();}},[loaded,profile]);
 
   /* --- タイマー --- */
-  async function startTimer(task){
+  async function startTimer(task) {
     if(timer){toast("先に計測中のタスクを停止してください");return;}
     const tm={taskId:task.id,startedAt:Date.now()};
-    setTimer(tm);LS.set("fn:timer",tm);
+    setTimer(tm); LS.set("fn:timer",tm);
     if(task.status==="todo") await updateRow("tasks",{id:task.id},{status:"in_progress"});
     toast("計測を開始しました");
   }
-  async function stopTimer(){
+  async function stopTimer() {
     if(!timer) return;
-    const task=dbState.tasks.find(t=>t.id===timer.taskId);
-    const seconds=Math.max(1,Math.floor((Date.now()-timer.startedAt)/1000));
+    const task = db.tasks.find(t=>t.id===timer.taskId);
+    const seconds = Math.max(1,Math.floor((Date.now()-timer.startedAt)/1000));
     setTimerDone({task,seconds,startedAt:timer.startedAt});
-    setTimer(null);LS.del("fn:timer");
+    setTimer(null); LS.del("fn:timer");
   }
-  async function commitWorkLog(task,startedAt,measuredSec,editedMin,note){
-    const dur=Math.min(editedMin,measuredSec/60);
-    const before=workedMin(dbState.worklogs,task.id);
-    await insertRow("worklogs",{id:uid(),task_id:task.id,user_id:profile.id,started_at:startedAt,ended_at:startedAt+measuredSec*1000,duration_min:Math.round(dur*100)/100,note:(note||"").slice(0,100),confirmed:true,created_at:Date.now()});
-    const after=before+dur; const lim=task.max_minutes||0;
+
+  /* --- 稼働ログ確定 --- */
+  async function commitWorkLog(task, startedAt, measuredSec, editedMin, note) {
+    const dur = Math.min(editedMin, measuredSec/60);
+    const before = workedMin(db.worklogs, task.id);
+    await insertRow("worklogs",{id:uid(),task_id:task.id,user_id:user.id,started_at:startedAt,ended_at:startedAt+measuredSec*1000,duration_min:Math.round(dur*100)/100,note:(note||"").slice(0,100),confirmed:true,created_at:Date.now()});
+    const after = before+dur;
+    const lim = task.max_minutes||0;
     if(lim>0){
-      if(after>=lim&&before<lim){await notifyUsers(pmIds(),"over",`${profile.name} のタスク「${task.title}」が稼働上限を超過しました`,{email:true});toast("⚠ 稼働上限を超過しました。PMに連絡してください。");}
-      else if(after>=lim*0.9&&before<lim*0.9){await notifyUsers(pmIds(),"limit90",`${profile.name} のタスク「${task.title}」が稼働上限の90%を超えました`,{email:true});toast("稼働時間が上限の90%を超えました");}
+      if(after>=lim&&before<lim){ await notifyUsers(pmIds(),"over",`${user.name} のタスク「${task.title}」が稼働上限を超過しました (${fmtHM(after)} / ${fmtHM(lim)})`,{email:true}); toast("⚠ 稼働上限を超過しました。PMに連絡してください。"); }
+      else if(after>=lim*0.9&&before<lim*0.9){ await notifyUsers(pmIds(),"limit90",`${user.name} のタスク「${task.title}」が稼働上限の90%を超えました`,{email:true}); toast("稼働時間が上限の90%を超えました"); }
       else toast("稼働を記録しました");
     } else toast("稼働を記録しました");
     setTimerDone(null);
   }
 
-  const appVal={db:dbState,user:profile,view,nav,theme,setTheme:setTheme2,refresh,insertRow,updateRow,deleteRow,notifyUsers,pmIds,toast,ask,timer,now,startTimer,stopTimer,openTaskId,setOpenTaskId,doLogout,commitWorkLog};
+  const appVal = {db,user,view,nav,theme,setTheme:setTheme2,refresh,insertRow,updateRow,deleteRow,notifyUsers,pmIds,toast,ask,timer,now,startTimer,stopTimer,openTaskId,setOpenTaskId,doLogout,commitWorkLog};
 
   if(!loaded) return <div className={"kd "+theme}><style>{CSS}</style><div className="flex items-center justify-center" style={{minHeight:"100vh",color:"var(--muted)"}}>読み込み中…</div></div>;
 
@@ -378,9 +460,9 @@ export default function App() {
     <Ctx.Provider value={appVal}>
       <div className={"kd "+theme}>
         <style>{CSS}</style>
-        {!profile
-          ? <AuthView doLogin={doLogin} doSignUp={doSignUp} hasUsers={dbState.users.length>0}/>
-          : (profile.must_change?<ForcePwView/>:<Shell/>)}
+        {!user
+          ? <AuthView doLogin={doLogin} hasUsers={db.users.length>0} />
+          : (user.must_change?<ForcePwView/>:<Shell/>)}
         {toastMsg&&<div className="toastbox">{toastMsg}</div>}
         <Modal open={!!confirmReq} onClose={()=>{confirmReq&&confirmReq.resolve(false);setConfirmReq(null);}} title="確認">
           <p className="text-sm mb-5">{confirmReq&&confirmReq.msg}</p>
@@ -398,21 +480,21 @@ export default function App() {
 /* ============================================================
    認証画面
    ============================================================ */
-function AuthView({doLogin,doSignUp,hasUsers}){
-  const [mode,setMode]=useState(hasUsers?"login":"setup");
-  const [seedInfo,setSeedInfo]=useState(null);
+function AuthView({doLogin, hasUsers}) {
+  const [mode, setMode] = useState(hasUsers?"login":"setup");
+  const [seedInfo, setSeedInfo] = useState(null);
   if(mode==="seed_done"&&seedInfo) return <SeedDoneView seedInfo={seedInfo} doLogin={doLogin}/>;
-  if(mode==="setup") return <SetupView doLogin={doLogin} doSignUp={doSignUp} onSeedDone={info=>{setSeedInfo(info);setMode("seed_done");}}/>;
-  if(mode==="register") return <RegisterView doSignUp={doSignUp} doLogin={doLogin} toLogin={()=>setMode("login")}/>;
-  if(mode==="pm_apply") return <PMApplyView doSignUp={doSignUp} toLogin={()=>setMode("login")}/>;
+  if(mode==="setup") return <SetupView doLogin={doLogin} onSeedDone={info=>{setSeedInfo(info);setMode("seed_done");}}/>;
+  if(mode==="register") return <RegisterView doLogin={doLogin} toLogin={()=>setMode("login")}/>;
+  if(mode==="pm_apply") return <PMApplyView toLogin={()=>setMode("login")}/>;
   return <LoginView doLogin={doLogin} toRegister={()=>setMode("register")} toPMApply={()=>setMode("pm_apply")}/>;
 }
 
-function LoginView({doLogin,toRegister,toPMApply}){
+function LoginView({doLogin, toRegister, toPMApply}) {
   const [email,setEmail]=useState(""); const [pw,setPw]=useState("");
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false);
-  async function submit(){setBusy(true);setErr("");const e=await doLogin(email,pw);setBusy(false);if(e)setErr(e);}
-  return(
+  async function submit() { setBusy(true); setErr(""); const e=await doLogin(email,pw); setBusy(false); if(e) setErr(e); }
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:400}}>
         <BrandMark/>
@@ -436,22 +518,35 @@ function LoginView({doLogin,toRegister,toPMApply}){
   );
 }
 
-function RegisterView({doSignUp,doLogin,toLogin}){
+function RegisterView({doLogin, toLogin}) {
   const [name,setName]=useState(""); const [email,setEmail]=useState("");
   const [pw,setPw]=useState(""); const [pw2,setPw2]=useState("");
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false);
-  async function submit(){
+  async function submit() {
     setErr("");
     if(!name.trim()){setErr("名前を入力してください");return;}
     if(!email.includes("@")){setErr("有効なメールアドレスを入力してください");return;}
     if(pw.length<6){setErr("パスワードは6文字以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
     setBusy(true);
-    const e=await doSignUp(email,pw,name,"Member");
-    if(e){setErr(e);setBusy(false);return;}
-    await doLogin(email,pw);
+    const em=email.trim().toLowerCase();
+    try {
+      const existing=await sb.select("users",`email=eq.${encodeURIComponent(em)}`);
+      if(existing.length){setErr("そのメールアドレスはすでに登録されています");setBusy(false);return;}
+      const salt=uid(); const passHash=await sha(pw,salt);
+      const allUsers=await sb.select("users","select=id");
+      const nu={id:uid(),name:name.trim(),email:em,role:"Member",avatar_color:AV_COLORS[allUsers.length%AV_COLORS.length],salt,pass_hash:passHash,pending:false,must_change:false,created_at:Date.now()};
+      await sb.insert("users",nu);
+      const pms=await sb.select("users","role=eq.PM&pending=eq.false&select=id");
+      if(pms.length){
+        const notifs=pms.map(p=>({id:uid(),user_id:p.id,type:"system",message:`新しいMemberが登録しました: ${nu.name} (${em})`,read:false,email:false,k:null,created_at:Date.now()}));
+        await sb.insert("notifications",notifs);
+      }
+      setBusy(false);
+      await doLogin(em,pw);
+    } catch(e){setErr("登録に失敗しました: "+e.message);setBusy(false);}
   }
-  return(
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:420}}>
         <BrandMark/>
@@ -474,19 +569,31 @@ function RegisterView({doSignUp,doLogin,toLogin}){
   );
 }
 
-function PMApplyView({doSignUp,toLogin}){
+function PMApplyView({toLogin}) {
   const [name,setName]=useState(""); const [email,setEmail]=useState("");
   const [pw,setPw]=useState(""); const [pw2,setPw2]=useState(""); const [reason,setReason]=useState("");
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false); const [done,setDone]=useState(false);
-  async function submit(){
+  async function submit() {
     setErr("");
     if(!name.trim()||!email.includes("@")||pw.length<6||pw!==pw2){setErr("すべての項目を正しく入力してください");return;}
     setBusy(true);
-    const e=await doSignUp(email,pw,name,"PM",reason);
-    if(e){setErr(e);setBusy(false);return;}
-    setBusy(false);setDone(true);
+    const em=email.trim().toLowerCase();
+    try {
+      const existing=await sb.select("users",`email=eq.${encodeURIComponent(em)}`);
+      if(existing.length){setErr("そのメールアドレスはすでに登録されています");setBusy(false);return;}
+      const salt=uid(); const passHash=await sha(pw,salt);
+      const allUsers=await sb.select("users","select=id");
+      const nu={id:uid(),name:name.trim(),email:em,role:"PM",avatar_color:AV_COLORS[allUsers.length%AV_COLORS.length],salt,pass_hash:passHash,pending:true,must_change:false,pm_apply_reason:reason.trim(),created_at:Date.now()};
+      await sb.insert("users",nu);
+      const pms=await sb.select("users","role=eq.PM&pending=eq.false&select=id");
+      if(pms.length){
+        const notifs=pms.map(p=>({id:uid(),user_id:p.id,type:"system",message:`PM権限申請: ${nu.name} (${em})${reason.trim()?" — "+reason.trim():""}`,read:false,email:false,k:null,created_at:Date.now()}));
+        await sb.insert("notifications",notifs);
+      }
+      setBusy(false); setDone(true);
+    } catch(e){setErr("送信に失敗しました: "+e.message);setBusy(false);}
   }
-  if(done) return(
+  if(done) return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full text-center" style={{maxWidth:400}}>
         <BrandMark/><CheckCircle2 size={40} style={{color:"var(--green)",margin:"20px auto 12px"}}/>
@@ -496,7 +603,7 @@ function PMApplyView({doSignUp,toLogin}){
       </div>
     </div>
   );
-  return(
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:420}}>
         <BrandMark/>
@@ -520,41 +627,31 @@ function PMApplyView({doSignUp,toLogin}){
   );
 }
 
-function SetupView({doLogin,doSignUp,onSeedDone}){
+function SetupView({doLogin, onSeedDone}) {
   const [name,setName]=useState(""); const [email,setEmail]=useState("");
   const [pw,setPw]=useState(""); const [seed,setSeed]=useState(true);
   const [busy,setBusy]=useState(false); const [err,setErr]=useState("");
-  async function submit(){
+  async function submit() {
     if(!name.trim()||!email.includes("@")||pw.length<6){setErr("名前・メールアドレス・パスワード(6文字以上)を入力してください");return;}
     setBusy(true);
-    try{
-      // PMアカウント作成
-      const e=await doSignUp(email,pw,name,"PM");
-      if(e){setErr(e);setBusy(false);return;}
-      // auth_idを取得してpendingを解除
-      const {data:authData}=await supabase.auth.signInWithPassword({email:email.trim().toLowerCase(),password:pw});
-      if(authData?.user){
-        await supabase.from("users").update({pending:false,auth_id:authData.user.id}).eq("email",email.trim().toLowerCase());
-      }
+    try {
+      const salt=uid();
+      const pmUser={id:uid(),name:name.trim(),email:email.trim().toLowerCase(),role:"PM",avatar_color:AV_COLORS[0],salt,pass_hash:await sha(pw,salt),pending:false,must_change:false,created_at:Date.now()};
+      await sb.insert("users",pmUser);
       let memberCreds=[];
       if(seed){
         const demo=[["佐藤 美咲","misaki@example.com"],["田中 蒼真","soma@example.com"],["鈴木 健","ken@example.com"]];
         const members=[];
         for(let i=0;i<demo.length;i++){
-          const p2="demo1234";
-          const {data:ad}=await supabase.auth.admin ? {data:null} : await supabase.auth.signUp({email:demo[i][1],password:p2});
-          const authId=ad?.user?.id;
-          const {data:allU}=await supabase.from("users").select("id");
-          const mu={id:uid(),auth_id:authId||null,name:demo[i][0],email:demo[i][1],role:"Member",avatar_color:AV_COLORS[(allU||[]).length%AV_COLORS.length],pending:false,must_change:false,created_at:Date.now()};
-          await supabase.from("users").insert(mu);
+          const s2=uid(); const p2="demo1234";
+          const mu={id:uid(),name:demo[i][0],email:demo[i][1],role:"Member",avatar_color:AV_COLORS[i+1],salt:s2,pass_hash:await sha(p2,s2),pending:false,must_change:false,created_at:Date.now()};
+          await sb.insert("users",mu);
           members.push(mu); memberCreds.push({name:mu.name,email:mu.email,pw:p2});
         }
         const d=new Date(); const iso=off=>{const x=new Date(d);x.setDate(d.getDate()+off);return x.toISOString().slice(0,10);};
-        const {data:pmRow}=await supabase.from("users").select("id").eq("email",email.trim().toLowerCase()).single();
-        const pmId=pmRow?.id;
-        const p1={id:uid(),name:"会員アプリ v2 開発",description:"モバイル会員アプリのリニューアル",budget:1200000,status:"active",start_date:iso(-20),end_date:iso(40),member_ids:members.map(x=>x.id),notion_url:"",created_at:Date.now()};
+        const p1={id:uid(),name:"会員アプリ v2 開発",description:"モバイル会員アプリのリニューアル開発プロジェクト",budget:1200000,status:"active",start_date:iso(-20),end_date:iso(40),member_ids:members.map(x=>x.id),notion_url:"",created_at:Date.now()};
         const p2j={id:uid(),name:"営業資料テンプレ整備",description:"提案書・見積テンプレートの標準化",budget:300000,status:"active",start_date:iso(-10),end_date:iso(25),member_ids:[members[0].id,members[2].id],notion_url:"",created_at:Date.now()};
-        await supabase.from("projects").insert([p1,p2j]);
+        await sb.insert("projects",[p1,p2j]);
         const mk=(pj,title,goal,assignee,pr,bud,maxH,dl,st)=>({id:uid(),project_id:pj.id,title,description:title+"の対応を行う。",goal,assigned_user_id:assignee,budget:bud,max_minutes:maxH*60,deadline:iso(dl),status:st,priority:pr,created_at:Date.now()});
         const tasks=[
           mk(p1,"ログイン画面の実装","メール認証・エラー表示まで完了させる",members[0].id,"high",150000,20,5,"in_progress"),
@@ -566,23 +663,21 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
           mk(p2j,"見積計算シート整備","係数変更に耐える計算式に更新",members[2].id,"high",100000,14,3,"todo"),
           mk(p2j,"過去事例集の作成","10事例を1枚ずつに要約",null,"low",60000,8,20,"todo"),
         ];
-        await supabase.from("tasks").insert(tasks);
+        await sb.insert("tasks",tasks);
         const wl=(t,u2,min,dayOff,note)=>{const st=Date.now()-dayOff*864e5-min*60000;return{id:uid(),task_id:t.id,user_id:u2,started_at:st,ended_at:st+min*60000,duration_min:min,note,confirmed:true,created_at:Date.now()};};
-        await supabase.from("worklogs").insert([
+        await sb.insert("worklogs",[
           wl(tasks[0],members[0].id,240,3,"UI組み込み"),wl(tasks[0],members[0].id,180,1,"バリデーション実装"),
           wl(tasks[1],members[1].id,300,4,"FCM設定"),wl(tasks[1],members[1].id,420,2,"端末検証"),
           wl(tasks[1],members[1].id,900,1,"iOS対応で難航"),
           wl(tasks[3],members[0].id,200,6,"反映と確認"),wl(tasks[5],members[0].id,150,2,"構成案作成"),
         ]);
-        setBusy(false);
-        onSeedDone({creds:memberCreds,email:email.trim().toLowerCase(),pw});
-      } else {
-        setBusy(false);
-        await doLogin(email,pw);
       }
-    }catch(e){setErr("セットアップに失敗しました: "+e.message);setBusy(false);}
+      setBusy(false);
+      if(seed) onSeedDone({creds:memberCreds,email:email.trim().toLowerCase(),pw});
+      else await doLogin(email,pw);
+    } catch(e){setErr("セットアップに失敗しました: "+e.message);setBusy(false);}
   }
-  return(
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:440}}>
         <BrandMark/>
@@ -591,7 +686,7 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
         <Field label="名前"><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="山田 太郎"/></Field>
         <Field label="メールアドレス"><input className="input" value={email} onChange={e=>setEmail(e.target.value)} placeholder="pm@example.com"/></Field>
         <Field label="パスワード (6文字以上)"><input type="password" className="input" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}/></Field>
-        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer"><input type="checkbox" checked={seed} onChange={e=>setSeed(e.target.checked)}/>デモデータを投入する</label>
+        <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer"><input type="checkbox" checked={seed} onChange={e=>setSeed(e.target.checked)}/>デモデータ(メンバー3名・プロジェクト2件・タスク8件)を投入する</label>
         {err&&<div className="err mb-3">{err}</div>}
         <button className="btn btn-p w-full justify-center" disabled={busy} onClick={submit}>{busy?"作成中…":"はじめる"}</button>
       </div>
@@ -599,19 +694,19 @@ function SetupView({doLogin,doSignUp,onSeedDone}){
   );
 }
 
-function SeedDoneView({seedInfo,doLogin}){
+function SeedDoneView({seedInfo, doLogin}) {
   const [busy,setBusy]=useState(false); const [err,setErr]=useState("");
-  async function handleLogin(){
+  async function handleLogin() {
     if(busy) return; setBusy(true); setErr("");
     for(let i=0;i<3;i++){
-      await new Promise(r=>setTimeout(r,i===0?800:1000));
+      await new Promise(r=>setTimeout(r,i===0?500:800));
       const result=await doLogin(seedInfo.email,seedInfo.pw);
       if(!result) return;
       if(i===2) setErr(result);
     }
     setBusy(false);
   }
-  return(
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:480}}>
         <BrandMark size={22}/>
@@ -629,18 +724,17 @@ function SeedDoneView({seedInfo,doLogin}){
   );
 }
 
-function ForcePwView(){
-  const {user,updateRow,doLogout,toast}=useApp();
+function ForcePwView() {
+  const {user,updateRow,toast}=useApp();
   const [pw,setPw]=useState(""); const [pw2,setPw2]=useState(""); const [err,setErr]=useState("");
-  async function submit(){
+  async function submit() {
     if(pw.length<6){setErr("6文字以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
-    const {error}=await supabase.auth.updateUser({password:pw});
-    if(error){setErr(error.message);return;}
-    await updateRow("users",{id:user.id},{must_change:false});
+    const salt=uid(); const h=await sha(pw,salt);
+    await updateRow("users",{id:user.id},{salt,pass_hash:h,must_change:false});
     toast("パスワードを更新しました");
   }
-  return(
+  return (
     <div className="flex items-center justify-center px-4" style={{minHeight:"100vh"}}>
       <div className="panel p-6 w-full" style={{maxWidth:400}}>
         <BrandMark size={22}/>
@@ -779,7 +873,7 @@ function NotifBell({onToggle}) {
 function NotifTray({onClose}) {
   const {db,user,updateRow}=useApp();
   const mine=db.notifications.filter(n=>n.user_id===user.id).slice(0,60);
-  async function markAll() { const unread=mine.filter(x=>!x.read); if(unread.length) { await supabase.from("notifications").update({read:true}).in("id",unread.map(x=>x.id)); await refresh(); } }
+  async function markAll() { for(const n of mine.filter(x=>!x.read)) await updateRow("notifications",{id:n.id},{read:true}); }
   async function markOne(id) { await updateRow("notifications",{id},{read:true}); }
   return (
     <div className="panel searchdrop" style={{left:"auto",right:-44,width:"min(380px, 92vw)",top:42,padding:0,overflow:"hidden"}}>
@@ -1922,13 +2016,12 @@ function ProfileView() {
   async function saveName(){if(!name.trim()) return;await updateRow("users",{id:user.id},{name:name.trim()});toast("名前を更新しました");}
   async function savePw(){
     setErr("");
+    const curHash=await sha(cur,user.salt);
+    if(curHash!==user.pass_hash){setErr("現在のパスワードが正しくありません");return;}
     if(pw.length<6){setErr("新しいパスワードは6文字以上にしてください");return;}
     if(pw!==pw2){setErr("確認用パスワードが一致しません");return;}
-    // 現在のパスワードで再認証
-    const {error:signInErr}=await supabase.auth.signInWithPassword({email:user.email,password:cur});
-    if(signInErr){setErr("現在のパスワードが正しくありません");return;}
-    const {error}=await supabase.auth.updateUser({password:pw});
-    if(error){setErr(error.message);return;}
+    const salt=uid(); const h=await sha(pw,salt);
+    await updateRow("users",{id:user.id},{salt,pass_hash:h});
     setCur("");setPw("");setPw2("");toast("パスワードを変更しました");
   }
   return (
@@ -1967,10 +2060,9 @@ function UsersView() {
   }
   async function resetPw(u){
     if(!(await ask(`${u.name} の仮パスワードを再発行しますか？`))) return;
-    const pw=genPw();
-    // Supabase Auth側のパスワードをサービスロールで更新（anon keyでは不可のためユーザー自身に変更させる）
-    await updateRow("users",{id:u.id},{must_change:true});
-    setIssued({name:u.name,email:u.email,pw,note:"※ パスワードリセットはSupabaseダッシュボードのAuthentication→Usersから行ってください"});
+    const pw=genPw(); const salt=uid(); const h=await sha(pw,salt);
+    await updateRow("users",{id:u.id},{salt,pass_hash:h,must_change:true});
+    setIssued({name:u.name,email:u.email,pw});
   }
   async function changeRole(u,r){
     if(u.role==="PM"&&r==="Member"&&db.users.filter(x=>x.role==="PM"&&!x.pending).length<=1){toast("最後のPMは変更できません");return;}
@@ -1983,7 +2075,7 @@ function UsersView() {
   return (
     <div>
       <PageTitle title="ユーザー管理" sub={`${db.users.length} 名`} right={<button className="btn btn-p" onClick={()=>setInvite(true)}><Plus size={15}/>メンバーを招待</button>}/>
-      <PMApprovalSection/>
+      <PMApprovalSection db={db} updateRow={updateRow} deleteRow={deleteRow} toast={toast}/>
       <div className="panel" style={{overflowX:"auto"}}>
         <table className="tbl" style={{minWidth:620}}>
           <thead><tr><th>ユーザー</th><th>メール</th><th>ロール</th><th/></tr></thead>
@@ -2018,8 +2110,7 @@ function UsersView() {
   );
 }
 
-function PMApprovalSection() {
-  const {db,updateRow,deleteRow,toast}=useApp();
+function PMApprovalSection({db, updateRow, deleteRow, toast}) {
   const pending=db.users.filter(u=>u.pending&&u.role==="PM");
   if(pending.length===0) return null;
   async function approve(u){await updateRow("users",{id:u.id},{pending:false});toast(`${u.name} のPM権限を承認しました`);}
