@@ -213,17 +213,6 @@ export default function App() {
   /* --- 全データ取得 --- */
   async function loadAll() {
     try {
-      const [users,projects,tasks,worklogs,requests,notifications,comments] = await Promise.all([
-        db_select("users"),
-        db_select("projects"),
-        db_select("tasks"),
-        db_select_q("tasks",{},{col:"created_at",asc:false}),
-        db_select("worklogs"),
-        db_select("requests"),
-        db_select("notifications"),
-        db_select("comments"),
-      ].slice(0,7));
-      // 上記は同じクエリが重複したので正しく書き直す
       const [u,p,t,wl,req,notif,com] = await Promise.all([
         supabase.from("users").select("*").then(r=>r.data||[]),
         supabase.from("projects").select("*").order("created_at",{ascending:false}).then(r=>r.data||[]),
