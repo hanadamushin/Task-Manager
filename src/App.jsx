@@ -9,12 +9,12 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer } from "recharts";
 
 /* ============================================================
-   稼働帳 (Kadōchō) — チーム稼働・タスク管理
+   FN.Task — チーム稼働・タスク管理
    単一ファイルReactアプリ / window.storage永続化 / Claude API連携
    ============================================================ */
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@600&display=swap');
+/* fonts loaded via <link> in index.html */
 .kd{ --bg:#F6F5F1; --panel:#FFFFFF; --panel2:#F0EEE7; --text:#1C1E26; --muted:#6A6F7A;
   --border:#E5E2D9; --ai:#2F5AA8; --ai-soft:#E7EDF8; --amber:#B7791F; --amber-bg:#FBF3E2;
   --red:#C43D3D; --red-bg:#FBEAEA; --green:#2F855A; --green-bg:#E6F4EC;
@@ -480,7 +480,7 @@ function BrandMark({ size = 30 }) {
         <span style={{ display: "block", width: size + 6, height: 3, background: "var(--ai)", borderRadius: 2 }} />
         <span style={{ display: "block", width: size + 6, height: 3, background: "var(--ai)", borderRadius: 2, opacity: 0.45 }} />
       </div>
-      <span className="wordmark" style={{ fontSize: size }}>稼働帳</span>
+      <span className="wordmark" style={{ fontSize: size }}>FN.Task</span>
     </div>
   );
 }
