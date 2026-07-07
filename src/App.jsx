@@ -509,11 +509,10 @@ function AuthView({doLogin, hasUsers}) {
   if(mode==="seed_done"&&seedInfo) return <SeedDoneView seedInfo={seedInfo} doLogin={doLogin}/>;
   if(mode==="setup") return <SetupView doLogin={doLogin} onSeedDone={info=>{setSeedInfo(info);setMode("seed_done");}}/>;
   if(mode==="register") return <RegisterView doLogin={doLogin} toLogin={()=>setMode("login")}/>;
-  if(mode==="pm_apply") return <PMApplyView toLogin={()=>setMode("login")}/>;
-  return <LoginView doLogin={doLogin} toRegister={()=>setMode("register")} toPMApply={()=>setMode("pm_apply")}/>;
+  return <LoginView doLogin={doLogin} toRegister={()=>setMode("register")}/>;
 }
 
-function LoginView({doLogin, toRegister, toPMApply}) {
+function LoginView({doLogin, toRegister}) {
   const [email,setEmail]=useState(""); const [pw,setPw]=useState("");
   const [show,setShow]=useState(false); const [err,setErr]=useState(""); const [busy,setBusy]=useState(false);
   async function submit() { setBusy(true); setErr(""); const e=await doLogin(email,pw); setBusy(false); if(e) setErr(e); }
@@ -531,11 +530,8 @@ function LoginView({doLogin, toRegister, toPMApply}) {
         </Field>
         {err&&<div className="err mb-3">{err}</div>}
         <button className="btn btn-p w-full justify-center mb-4" disabled={busy} onClick={submit}>{busy?"確認中…":"ログイン"}</button>
-        <div className="flex flex-col gap-2">
-          <button className="btn w-full justify-center" onClick={toRegister}><User size={15}/>新規登録 (Member)</button>
-          <button className="btn w-full justify-center" onClick={toPMApply}><Shield size={15}/>PM権限を申請する</button>
-        </div>
-        <p className="text-xs mt-4" style={{color:"var(--muted)"}}>パスワードを忘れた場合はPMに再発行を依頼してください。</p>
+        <button className="btn w-full justify-center" onClick={toRegister}><User size={15}/>新規登録 (Member)</button>
+        <p className="text-xs mt-4" style={{color:"var(--muted)"}}>PM権限が必要な場合は既存のPMにご連絡ください。パスワードを忘れた場合もPMに再発行を依頼してください。</p>
       </div>
     </div>
   );
@@ -2118,7 +2114,7 @@ function UsersView() {
   }
   async function changeRole(u,r){
     if(u.role==="PM"&&r==="Member"&&db.users.filter(x=>x.role==="PM"&&!x.pending).length<=1){toast("最後のPMは変更できません");return;}
-    await updateRow("users",{id:u.id},{role:r}); toast("ロールを変更しました");
+    await updateRow("users",{id:u.id},{role:r,pending:false}); toast("ロールを変更しました");
   }
   async function del(u){
     if(!(await ask(`${u.name} を削除しますか？`))) return;
