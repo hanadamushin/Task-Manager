@@ -1431,10 +1431,12 @@ function LLMModal({p, onClose}) {
   const candidates=db.users.filter(u=>(p.member_ids||[]).includes(u.id)||u.role==="PM").filter(u=>!u.pending);
   const st=projectStats(p,db.tasks,db.worklogs);
   useEffect(()=>{chatEnd.current&&chatEnd.current.scrollIntoView({behavior:"smooth"});},[chat,loading]);
-  const sysPrompt=()=>`あなたはPM支援AIです。以下のJSON配列【のみ】で回答してください(説明文不要):\n${LLM_JSON_SPEC}\n制約: assigned_memberは${candidates.map(u=>u.name).join(",")||"なし"}のみ。deadline: ${todayStr()}〜${p.end_date||"未設定"}。budgetの合計は${Math.max(0,st.remain)}円以内の目安。\nプロジェクト: ${p.name}: ${p.description}`;
+  const sysPrompt=()=>`あなたはPM支援AIです。必ずJSON配列のみで回答してください。コードブロック・説明文は不要です。[ から始まり ] で終わるJSONのみ出力すること。フォーマット: ${LLM_JSON_SPEC} 制約: assigned_memberは次のメンバー名のみ: ${candidates.map(u=>u.name).join(", ")||"なし"} / deadline: ${todayStr()}〜${p.end_date||"未設定"} / budgetの合計は${Math.max(0,st.remain)}円以内 / プロジェクト: ${p.name}(${p.description}) / 絶対にJSONのみ出力すること`;
   function normalize(arr){return(Array.isArray(arr)?arr:[]).map(r=>{const m=matchMember(r.assigned_member,candidates);return{_k:uid(),title:String(r.title||"").slice(0,100),description:String(r.description||""),goal:String(r.goal||""),assigned_user_id:m?m.id:"",unmatched:!!(r.assigned_member&&String(r.assigned_member).trim()&&!m),priority:["high","medium","low"].includes(r.priority)?r.priority:"medium",budget:Math.max(0,Number(r.budget)||0),max_hours:Math.max(0,Number(r.max_hours)||0),deadline:/^\d{4}-\d{2}-\d{2}$/.test(String(r.deadline||""))?r.deadline:""};}).filter(r=>r.title);}
   async function send(){const msg=input.trim();if(!msg||loading)return;setErr("");setInput("");const nextChat=[...chat,{role:"user",content:msg}];setChat(nextChat);setLoading(true);
-    try{const data=await callClaude([{role:"user",content:sysPrompt()},{role:"assistant",content:"了解しました。JSON配列のみで回答します。"},...nextChat],{max_tokens:1000});const text=textOf(data);setChat(c=>[...c,{role:"assistant",content:text}]);try{const rows=normalize(parseJsonArray(text));if(rows.length)setPreview(rows);else setErr("タスクを抽出できませんでした");}catch(e2){setErr("JSONの解析に失敗しました");}}catch(e){setErr(e.message||"APIエラー");}
+    try{const data=await callClaude([{role:"user",content:sysPrompt()},...nextChat,{role:"assistant",content:"["}],{max_tokens:1000});
+      const rawText=textOf(data);
+      const text="["+rawText;setChat(c=>[...c,{role:"assistant",content:text}]);try{const rows=normalize(parseJsonArray(text));if(rows.length)setPreview(rows);else setErr("タスクを抽出できませんでした");}catch(e2){setErr("JSONの解析に失敗しました。「JSONだけで返してください」と追加で依頼してみてください。");}}catch(e){setErr(e.message||"APIエラー");}
     setLoading(false);}
   function importPaste(){setErr("");try{const rows=normalize(parseJsonArray(pasteText));if(!rows.length){setErr("有効なタスクが見つかりませんでした");return;}setPreview(rows);setPasteMode(false);}catch(e){setErr("JSONの解析に失敗しました");}}
   const setRow=(k,key,v)=>setPreview(list=>list.map(r=>r._k===k?{...r,[key]:v,unmatched:key==="assigned_user_id"?false:r.unmatched}:r));
