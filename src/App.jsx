@@ -800,6 +800,9 @@ function PageRouter() {
     if(p==="dash") return <PMDashboard/>;
     if(p==="projects") return <ProjectsView/>;
     if(p==="project") return <ProjectDetail id={view.id} tab={view.tab}/>;
+    if(p==="mytasks") return <MemberTasks/>;
+    if(p==="history") return <HistoryView/>;
+    if(p==="unassigned") return <UnassignedView/>;
     if(p==="requests") return <RequestsView/>;
     if(p==="users") return <UsersView/>;
     if(p==="profile") return <ProfileView/>;
@@ -813,7 +816,7 @@ function PageRouter() {
   return <MemberDashboard/>;
 }
 
-const NAV_PM=[{page:"dash",label:"ダッシュボード",icon:Home},{page:"projects",label:"プロジェクト",icon:Briefcase},{page:"requests",label:"申請管理",icon:Inbox},{page:"users",label:"ユーザー管理",icon:Users}];
+const NAV_PM=[{page:"dash",label:"ダッシュボード",icon:Home},{page:"projects",label:"プロジェクト",icon:Briefcase},{page:"mytasks",label:"マイタスク",icon:ClipboardList},{page:"requests",label:"申請管理",icon:Inbox},{page:"users",label:"ユーザー管理",icon:Users}];
 const NAV_M=[{page:"mydash",label:"ホーム",icon:Home},{page:"mytasks",label:"マイタスク",icon:ClipboardList},{page:"history",label:"稼働履歴",icon:History}];
 
 function SideNav() {
@@ -1742,6 +1745,7 @@ function RequestsView() {
    ============================================================ */
 function UnassignedBanner() {
   const {db,user,nav}=useApp();
+  if(user.role==="PM") return null;
   const myActive=db.tasks.filter(t=>t.assigned_user_id===user.id&&t.status!=="done");
   const activePj=new Set(db.projects.filter(p=>p.status==="active").map(p=>p.id));
   const unassigned=db.tasks.filter(t=>!t.assigned_user_id&&t.status!=="done"&&activePj.has(t.project_id));
@@ -1832,7 +1836,7 @@ function MemberTasks() {
   const projects=pjIds.map(id=>db.projects.find(p=>p.id===id)).filter(Boolean);
   return (
     <div>
-      <PageTitle title="マイタスク" sub={`全 ${mine.length} 件`}/>
+      <PageTitle title="マイタスク" sub={`自分に割り当てられたタスク ${mine.length} 件`}/>
       <UnassignedBanner/>
       <div className="mb-4"><Seg value={stF} onChange={setStF} options={[{value:"all",label:"すべて"},{value:"todo",label:"未着手"},{value:"in_progress",label:"進行中"},{value:"done",label:"完了"}]}/></div>
       {projects.length===0&&<div className="panel"><Empty icon={ClipboardList} text="割り当てられたタスクはまだありません"/></div>}
