@@ -208,8 +208,9 @@ function projectStats(p, tasks, logs) {
 
 /* ---------- Claude API ---------- */
 async function callClaude(messages, extra={}) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+  const res = await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/claude-proxy", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY"},
     body: JSON.stringify({model:"claude-sonnet-4-6", max_tokens:1000, messages, ...extra}),
   });
   if(!res.ok) throw new Error("APIエラー ("+res.status+")");
