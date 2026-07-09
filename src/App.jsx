@@ -391,12 +391,13 @@ export default function App() {
     if(filtered.length) {
       await sb.insert("notifications", filtered);
       await loadAll();
-      // メール送信
+      // 通知送信（メール・Slack）
       if(opts.email) {
-        const emailTargets = ids.map(userId=>{const u=db.users.find(x=>x.id===userId);return u?u.email:null;}).filter(Boolean);
+        const targets = ids.map(userId=>db.users.find(x=>x.id===userId)).filter(Boolean);
+        // メール通知
+        const emailTargets = targets.filter(u=>u.notify_email!==false).map(u=>u.email).filter(Boolean);
         if(emailTargets.length) {
           try {
-            console.log("メール送信開始:", emailTargets, message.slice(0,30));
             const res = await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/send-email", {
               method:"POST",
               headers:{"Content-Type":"application/json","Authorization":"Bearer sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY"},
@@ -409,6 +410,18 @@ export default function App() {
             const result = await res.json();
             console.log("メール送信結果:", res.status, result);
           } catch(e) { console.warn("メール送信失敗:", e); }
+        }
+        // Slack通知（notify_slack=trueのユーザーが対象にいる場合）
+        const slackTargets = targets.filter(u=>u.notify_slack===true);
+        if(slackTargets.length) {
+          try {
+            const names = slackTargets.map(u=>u.name).join("、");
+            await fetch("https://bfzqetdxpzcrgngszueg.supabase.co/functions/v1/send-slack", {
+              method:"POST",
+              headers:{"Content-Type":"application/json","Authorization":"Bearer sb_publishable_aeO-GvHnBTZAOW3wHxrQ4A_khCpLkDY"},
+              body:JSON.stringify({text:`*【FN.Task】* ${message}\n宛先: ${names}\n<https://task-manager-tau-two-25.vercel.app|FN.Taskを開く>`})
+            });
+          } catch(e) { console.warn("Slack送信失敗:", e); }
         }
       }
     }
@@ -989,7 +1002,7 @@ function PMDashboard() {
   const pending=db.requests.filter(r=>r.status==="pending");
   const alerts90=db.tasks.filter(t=>{if(t.status==="done"||!t.max_minutes) return false; const w=workedMin(db.worklogs,t.id); return w>=t.max_minutes*0.9;});
   const overdue=db.tasks.filter(t=>t.status!=="done"&&t.deadline&&daysUntil(t.deadline)<0);
-  const members=db.users.filter(u=>u.role==="Member");
+  const members=db.users.filter(u=>!u.pending);
   return (
     <div>
       <PageTitle title="ダッシュボード" sub="チーム全体の稼働状況"/>
@@ -1018,8 +1031,12 @@ function PMDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{active.map(p=><ProjectCard key={p.id} p={p}/>)}</div>
         )}
       </section>
+      <section className="panel p-4 mb-4">
+        <SecTitle icon={Users} title="チームタスク状況"/>
+        <TeamTaskOverview/>
+      </section>
       <section className="panel p-4">
-        <SecTitle icon={Clock} title="メンバー稼働ヒートマップ (直近7日)"/>
+        <SecTitle icon={Clock} title="稼働ヒートマップ (直近7日)"/>
         <Heatmap members={members} logs={db.worklogs}/>
       </section>
     </div>
@@ -1108,7 +1125,7 @@ function ProjectForm({initial, onClose}) {
     const e={};
     if(!f.name.trim()) e.name="プロジェクト名は必須です";
     if(!f.description.trim()) e.description="説明は必須です";
-    if(!(Number(f.budget)>0)) e.budget="総予算(円)を入力してください";
+    if(f.budget===""||isNaN(Number(f.budget))||Number(f.budget)<0) e.budget="総予算(円)を入力してください(0以上)";
     if(!f.start_date) e.start_date="開始日は必須です";
     if(!f.end_date) e.end_date="終了日は必須です";
     if(f.start_date&&f.end_date&&f.end_date<f.start_date) e.end_date="終了日は開始日以降にしてください";
@@ -1285,7 +1302,7 @@ function TaskForm({p, initial, onClose}) {
     const e={};
     if(!f.title.trim()) e.title="タスク名は必須です";
     if(!f.goal.trim()) e.goal="目標・ノルマは必須です";
-    if(!(Number(f.budget)>=0)||f.budget==="") e.budget="予算(円)を入力してください";
+    if(f.budget===""||isNaN(Number(f.budget))||Number(f.budget)<0) e.budget="予算(円)を入力してください(0以上)";
     const mm=(Number(f.maxH)||0)*60+(Number(f.maxM)||0);
     if(mm<=0) e.maxH="稼働時間上限を入力してください";
     if(!f.deadline) e.deadline="期日は必須です";
@@ -2072,6 +2089,12 @@ function ProfileView() {
     await updateRow("users",{id:user.id},{salt,pass_hash:h});
     setCur("");setPw("");setPw2("");toast("パスワードを変更しました");
   }
+  const [notifyEmail, setNotifyEmail] = useState(user.notify_email !== false);
+  const [notifySlack, setNotifySlack] = useState(user.notify_slack === true);
+  async function saveNotify() {
+    await updateRow("users", {id:user.id}, {notify_email: notifyEmail, notify_slack: notifySlack});
+    toast("通知設定を保存しました");
+  }
   return (
     <div style={{maxWidth:480}}>
       <PageTitle title="プロフィール設定"/>
@@ -2079,6 +2102,19 @@ function ProfileView() {
         <div className="flex items-center gap-3 mb-4"><Avatar user={user} size={44}/><div><div className="font-bold">{user.name}</div><div className="text-xs" style={{color:"var(--muted)"}}>{user.email} · {user.role}</div></div></div>
         <Field label="表示名"><input className="input" value={name} onChange={e=>setName(e.target.value)}/></Field>
         <button className="btn btn-p" onClick={saveName}>名前を保存</button>
+      </div>
+      <div className="panel p-4 mb-4">
+        <SecTitle icon={Bell} title="通知設定"/>
+        <p className="text-xs mb-3" style={{color:"var(--muted)"}}>タスク割当・承認・稼働アラートなどの通知先を選択してください。</p>
+        <label className="flex items-center gap-3 py-2 cursor-pointer">
+          <input type="checkbox" checked={notifyEmail} onChange={e=>setNotifyEmail(e.target.checked)}/>
+          <div><div className="text-sm font-medium">メール通知</div><div className="text-xs" style={{color:"var(--muted)"}}>{user.email}</div></div>
+        </label>
+        <label className="flex items-center gap-3 py-2 cursor-pointer">
+          <input type="checkbox" checked={notifySlack} onChange={e=>setNotifySlack(e.target.checked)}/>
+          <div><div className="text-sm font-medium">Slack通知</div><div className="text-xs" style={{color:"var(--muted)"}}>FastNeuraワークスペースの通知チャンネルに送信</div></div>
+        </label>
+        <button className="btn btn-p mt-3" onClick={saveNotify}>通知設定を保存</button>
       </div>
       <div className="panel p-4">
         <SecTitle icon={Shield} title="パスワード変更"/>
@@ -2176,6 +2212,59 @@ function PMApprovalSection({db, updateRow, deleteRow, toast}) {
           <div className="flex gap-2"><button className="btn btn-d btn-sm" onClick={()=>reject(u)}><X size={13}/>却下</button><button className="btn btn-p btn-sm" onClick={()=>approve(u)}><Check size={13}/>承認</button></div>
         </div>))}
       </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   チームタスク可視化コンポーネント (PMダッシュボード用)
+   ============================================================ */
+function TeamTaskOverview() {
+  const {db,setOpenTaskId}=useApp();
+  const members=db.users.filter(u=>!u.pending);
+  if(members.length===0) return <Empty icon={Users} text="ユーザーがいません"/>;
+  return (
+    <div className="flex flex-col gap-3">
+      {members.map(u=>{
+        const tasks=db.tasks.filter(t=>t.assigned_user_id===u.id&&t.status!=="done");
+        const done=db.tasks.filter(t=>t.assigned_user_id===u.id&&t.status==="done").length;
+        const total=tasks.length+done;
+        const maxMin=tasks.reduce((a,t)=>a+(t.max_minutes||0),0);
+        const workedM=tasks.reduce((a,t)=>a+workedMin(db.worklogs,t.id),0);
+        const cap=maxMin>0?clamp01(workedM/maxMin):0;
+        const overdue=tasks.filter(t=>t.deadline&&daysUntil(t.deadline)<0).length;
+        const soon=tasks.filter(t=>t.deadline&&daysUntil(t.deadline)>=0&&daysUntil(t.deadline)<=3).length;
+        return (
+          <div key={u.id} className="panel p-3" style={{background:"var(--panel2)",border:"none"}}>
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <Avatar user={u} size={28}/>
+              <div className="font-medium text-sm flex-1">{u.name}<span className="text-xs ml-2" style={{color:"var(--muted)"}}>{u.role}</span></div>
+              <div className="flex gap-2 text-xs flex-wrap">
+                {overdue>0&&<Badge cls="b-red">期日超過 {overdue}件</Badge>}
+                {soon>0&&<Badge cls="b-amber">期日間近 {soon}件</Badge>}
+                <Badge cls="b-slate">進行中 {tasks.length}件 / 完了 {done}/{total}</Badge>
+              </div>
+            </div>
+            {maxMin>0&&<div className="mb-2">
+              <div className="flex justify-between text-xs mb-1" style={{color:"var(--muted)"}}>
+                <span>稼働キャパ</span><span className="mono">{fmtHM(workedM)} / {fmtHM(maxMin)}</span>
+              </div>
+              <Prog ratio={cap}/>
+            </div>}
+            {tasks.length>0&&<div className="flex flex-col gap-1 mt-2">
+              {tasks.slice(0,4).map(t=>(
+                <div key={t.id} className="flex items-center gap-2 text-xs cursor-pointer hover:opacity-70" onClick={()=>setOpenTaskId(t.id)}>
+                  <Badge cls={PR_BADGE[t.priority]}>{PR[t.priority]}</Badge>
+                  <span className="flex-1 truncate">{t.title}</span>
+                  <span className="mono" style={{color:t.deadline&&daysUntil(t.deadline)<0?"var(--red)":t.deadline&&daysUntil(t.deadline)<=3?"var(--amber)":"var(--muted)",flexShrink:0}}>{t.deadline||"期日なし"}</span>
+                </div>
+              ))}
+              {tasks.length>4&&<div className="text-xs" style={{color:"var(--muted)"}}>他 {tasks.length-4} 件</div>}
+            </div>}
+            {tasks.length===0&&<div className="text-xs" style={{color:"var(--muted)"}}>進行中のタスクなし</div>}
+          </div>
+        );
+      })}
     </div>
   );
 }
