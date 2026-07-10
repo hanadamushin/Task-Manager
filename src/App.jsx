@@ -1921,7 +1921,7 @@ function MemberTaskModal({taskId, onClose}) {
   const extPending=db.requests.find(r=>r.type==="extend"&&r.task_id===t.id&&r.user_id===user.id&&r.status==="pending");
   const over=t.max_minutes>0&&worked>=t.max_minutes;
   async function complete(){
-    if(comment.trim().length<50) return;
+    if(comment.trim().length<1) return;
     await updateRow("tasks",{id:t.id},{status:"done",completed_at:Date.now(),completion_comment:comment.trim()});
     if(running) await stopTimer();
     await notifyUsers(pmIds(),"done",`${user.name} が「${t.title}」を完了報告しました`,{email:true});
@@ -1978,12 +1978,12 @@ function MemberTaskModal({taskId, onClose}) {
       {t.status!=="done"&&<div className="mt-5 flex flex-col gap-3">
         {completing?(
           <div className="panel p-3" style={{background:"var(--panel2)",border:"none"}}>
-            <div className="lbl">完了コメント (50文字以上・必須)</div>
+            <div className="lbl">完了コメント (必須)</div>
             <textarea className="textarea" value={comment} onChange={e=>setComment(e.target.value)} placeholder="達成内容・成果物の場所・引き継ぎ事項などを記入"/>
-            <div className="text-xs mt-1 text-right" style={{color:comment.trim().length>=50?"var(--green)":"var(--muted)"}}>{comment.trim().length} / 50文字</div>
+            <div className="text-xs mt-1 text-right" style={{color:comment.trim().length>=1?"var(--green)":"var(--muted)"}}>{comment.trim().length}文字</div>
             <div className="flex justify-end gap-2 mt-2">
               <button className="btn btn-sm" onClick={()=>setCompleting(false)}>戻る</button>
-              <button className="btn btn-p btn-sm" disabled={comment.trim().length<50} onClick={complete}><Check size={13}/>完了報告を送信</button>
+              <button className="btn btn-p btn-sm" disabled={comment.trim().length<1} onClick={complete}><Check size={13}/>完了報告を送信</button>
             </div>
           </div>
         ):extending?(
